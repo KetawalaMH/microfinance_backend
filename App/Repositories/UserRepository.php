@@ -85,6 +85,7 @@ class UserRepository implements UserRepositoryInterface
             $user_type_id = isset($data['user_type_id']) ? intval($data['user_type_id']) : 3;
             $is_active = isset($data['is_active']) ? boolval($data['is_active']) : 1;
             $mobile = isset($data['mobile_number']) ? $data['mobile_number'] : 00000000;
+           
 
             $is_email_exist = User::where('email_address', $email_address)
                 ->where('is_active', 1)
@@ -105,7 +106,8 @@ class UserRepository implements UserRepositoryInterface
                     'password' => Hash::make($password),
                     'is_active' => $is_active,
                     'created_at' => $date_time,
-                    'updated_at' => $date_time
+                    'updated_at' => $date_time,
+                    'aes_key' => "fffff"
                 ]);
 
                 // Generate JWT token
@@ -146,6 +148,8 @@ class UserRepository implements UserRepositoryInterface
             $user = User::where('email_address', $email_address)
                 ->where('is_active', 1)
                 ->orderBy('id', 'desc')->first();
+
+            
 
             if (!isset($user->id)) {
                 $output['success'] = false;
@@ -638,4 +642,13 @@ class UserRepository implements UserRepositoryInterface
             ];
         }
     }
+
+    private function generateAESKey(string $email): string
+    {
+
+        $aesKey = hash('sha256', $email, true);   
+
+        return base64_encode($aesKey);  
+    }
+
 }
