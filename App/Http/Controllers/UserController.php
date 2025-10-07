@@ -80,6 +80,7 @@ class UserController extends Controller
 
                 //update user with bank id
                 $user_out_data = $this->userRepository->updateUser($user['user_id'], ['bank_id' => $bank['id']]);
+                Log::info("output", $user_out_data);
                 if (!$user_out_data['success']) {
                     $output['success'] = false;
                     $output['message'] = $user_out_data['message'];

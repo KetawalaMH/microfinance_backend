@@ -7,10 +7,13 @@ use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Models\User;
+use App\Models\UserType;
 use App\Models\EmailConfirmation;
 use App\Models\Setting;
 use Carbon\Carbon;
 use App\Models\Invitation;
+use Illuminate\Support\Facades\Http;
+
 
 /*use Illuminate\Support\Facades\Http;*/
 use Illuminate\Support\Facades\Log; // Import Log facade at the top
@@ -98,27 +101,57 @@ class UserRepository implements UserRepositoryInterface
             } else {
                 $date_time = date('Y-m-d H:i:s');
 
-                $new_user = User::create([
-                    'user_type_id' => $user_type_id,
-                    'full_name' => $full_name,
-                    'email_address' => $email_address,
-                    'mobile_number' => $mobile,
-                    'password' => Hash::make($password),
-                    'is_active' => $is_active,
-                    'created_at' => $date_time,
-                    'updated_at' => $date_time,
-                    'aes_key' => "fffff"
-                ]);
+
+
+                $role = UserType::where('id', $user_type_id)->first();
+                Log::info($role);
+
+                if($role->is_active == 0){
+                    $output['success'] = false;
+                    $output['message'] = "This account type creation is blocked!";
+                    $output['data'] = null;
+                }
 
                 // Generate JWT token
-                $token = JWTAuth::fromUser($new_user);
+                // $token = JWTAuth::fromUser($new_user);
 
-                $output['success'] = true;
-                $output['message'] = "User sign up success";
-                $output['data']['user_id'] = isset($new_user->id) ? intval($new_user->id) : 0;
-                $output['data']['full_name'] = isset($new_user->full_name) ? $new_user->full_name : null;
-                $output['data']['email_address'] = isset($new_user->email_address) ? $new_user->email_address : null;
-                $output['data']['token'] = $token;
+                $fabricResponse = Http::post('http://localhost:4000/ca/registerUser', [
+                    'org' => 'org2',
+                    'userId' => $full_name,  
+                    'role' => $role->user_type,              
+                    'affiliation' => 'org2.department1'
+                ]);
+
+                if ($fabricResponse->failed()) {
+                    Log::error('Fabric registration failed: ' . $fabricResponse->body());
+                }
+
+                Log::info($fabricResponse);
+
+                if($fabricResponse->status() ==200){
+
+                    $new_user = User::create([
+                        'user_type_id' => $user_type_id,
+                        'full_name' => $full_name,
+                        'email_address' => $email_address,
+                        'mobile_number' => $mobile,
+                        'password' => Hash::make($password),
+                        'is_active' => $is_active,
+                        'created_at' => $date_time,
+                        'updated_at' => $date_time,
+                        'aes_key' => $this->generateAESKey($email_address)
+                    ]);
+
+                    $output['success'] = true;
+                    $output['message'] = "User sign up success";
+                    $output['data']['user_id'] = isset($new_user->id) ? intval($new_user->id) : 0;
+                    $output['data']['full_name'] = isset($new_user->full_name) ? $new_user->full_name : null;
+                    $output['data']['email_address'] = isset($new_user->email_address) ? $new_user->email_address : null;
+                    // $output['data']['token'] = $token;
+                    
+                }
+
+
             }
         } catch (\Exception $e) {
             $url = isset($data['url']) ? $data['url'] : null;
