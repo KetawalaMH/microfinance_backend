@@ -114,12 +114,14 @@ class UserRepository implements UserRepositoryInterface
 
                 // Generate JWT token
                 // $token = JWTAuth::fromUser($new_user);
+                $aes_key = $this->generateAESKey($email_address);
 
                 $fabricResponse = Http::post('http://localhost:4000/ca/registerUser', [
                     'org' => $role->org,
                     'userId' => $full_name,  
                     'role' => $role->user_type,              
-                    'affiliation' => 'org2.department1'
+                    'affiliation' => 'org2.department1',
+                    'aesKey' => $aes_key
                 ]);
 
                 if ($fabricResponse->failed()) {
@@ -142,7 +144,7 @@ class UserRepository implements UserRepositoryInterface
                         'is_active' => $is_active,
                         'created_at' => $date_time,
                         'updated_at' => $date_time,
-                        'aes_key' => $this->generateAESKey($email_address),
+                        'aes_key' => $aes_key,
                         'org'=>$role->org
                     ]);
 
@@ -205,7 +207,8 @@ class UserRepository implements UserRepositoryInterface
 
                     $fabricResponse = Http::post('http://localhost:4000/ca/login', [
                         'org' => $user->org,
-                        'userId' => $user->full_name
+                        'userId' => $user->full_name,
+                        'aeskey' => $user->aes_key
                     ]);
 
                 if ($fabricResponse->failed()) {
