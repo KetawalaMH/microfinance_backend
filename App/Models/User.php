@@ -44,7 +44,8 @@ class User extends Authenticatable implements JWTSubject
         'created_at',
         'updated_at',
         'bank_id',
-        'aes_key'
+        'aes_key',
+        'org'
     ];
     
     /**

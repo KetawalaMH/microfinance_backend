@@ -51,7 +51,7 @@ class UserController extends Controller
             } else {
                 $data = json_decode($request->getContent(), true);
                 $data['url'] = $request->url();
-                $data['user_type_id'] = 1;
+                Log::info("request data",$data);
                 $out_data = $this->userRepository->userSignUp($data);
                 if (!$out_data['success']) {
                     $output['success'] = false;

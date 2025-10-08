@@ -18,14 +18,16 @@ class UserType extends Model
         'user_type',
         'is_active',
         'created_at',
-        'updated_at'
+        'updated_at',
+        'org'
     ];
 
     protected $casts = [
         "user_type"=>"string",
         "is_active"=>"integer",
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'updated_at' => 'datetime',
+        'org' => 'string'
     ];
 }
 
