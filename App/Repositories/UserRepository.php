@@ -14,6 +14,8 @@ use Carbon\Carbon;
 use App\Models\Invitation;
 use Illuminate\Support\Facades\Http;
 
+$caBaseUrl = env('FABRIC_CA_BASE_URL');
+
 
 /*use Illuminate\Support\Facades\Http;*/
 use Illuminate\Support\Facades\Log; // Import Log facade at the top
@@ -116,7 +118,9 @@ class UserRepository implements UserRepositoryInterface
                 // $token = JWTAuth::fromUser($new_user);
                 $aes_key = $this->generateAESKey($email_address);
 
-                $fabricResponse = Http::post('http://localhost:4000/ca/registerUser', [
+                Log::info($caBaseUrl);
+
+                $fabricResponse = Http::post("http://localhost:4000/ca/registerUser", [
                     'org' => $role->org,
                     'userId' => $full_name,  
                     'role' => $role->user_type,              
