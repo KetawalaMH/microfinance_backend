@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Repositories\Interfaces\SettingRepositoryInterface;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Models\MemberType;
 
 use App\Models\Memory;
 use App\Models\Moment;
@@ -52,7 +53,7 @@ class SettingRepository implements SettingRepositoryInterface
         return $decryptedText;
     }
 
-    function generateRandomString($length/* = 4*/, $type/* = 1*/)
+    function generateRandomString($length/* = 4*/ , $type/* = 1*/)
     {
         if (intval($type) == 1) {
             $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -72,5 +73,10 @@ class SettingRepository implements SettingRepositoryInterface
             $randomString .= $characters[rand(0, $charactersLength - 1)];
         }
         return $randomString;
+    }
+
+    public function getMemberTypes()
+    {
+        return MemberType::where('is_active', true)->get(['id', 'member_type']);
     }
 }
