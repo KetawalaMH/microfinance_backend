@@ -2,6 +2,16 @@
 
 namespace App\Providers;
 
+use App\Repositories\Interfaces\MemberRepositoryInterface;
+use App\Repositories\MemberRepository;
+use App\Services\BankService;
+use App\Services\Interfaces\BankServiceInterface;
+use App\Services\Interfaces\MemberServiceInterface;
+use App\Services\Interfaces\SettingServiceInterface;
+use App\Services\Interfaces\UserServiceInterface;
+use App\Services\MemberService;
+use App\Services\SettingService;
+use App\Services\UserService;
 use Illuminate\Support\ServiceProvider;
 
 use App\Repositories\Interfaces\UserRepositoryInterface;
@@ -23,6 +33,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
         $this->app->bind(SettingRepositoryInterface::class, SettingRepository::class);
         $this->app->bind(BankRepositoryInterface::class, BankRepository::class);
+        $this->app->bind(MemberRepositoryInterface::class, MemberRepository::class);
+        $this->app->bind(MemberServiceInterface::class, MemberService::class);
+        $this->app->bind(UserServiceInterface::class, UserService::class);
+        $this->app->bind(BankServiceInterface::class, BankService::class);
+        $this->app->bind(SettingServiceInterface::class, SettingService::class);
     }
 
     /**

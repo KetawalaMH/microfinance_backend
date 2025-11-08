@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Mail\ResetPasswordOtpMail;
+use App\Services\Interfaces\BankServiceInterface;
+use App\Services\Interfaces\UserServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Repositories\Interfaces\UserRepositoryInterface;
-use App\Repositories\Interfaces\BankRepositoryInterface;
 use Illuminate\Support\Facades\Log; // Import Log facade at the top
 use App\Mail\InvitationMail;
 use Illuminate\Support\Facades\Mail;
@@ -17,12 +17,12 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class UserController extends Controller
 {
-    private $userRepository, $bankRepository;
+    private $userService, $bankService;
 
-    public function __construct(UserRepositoryInterface $userRepository, BankRepositoryInterface $bankRepository)
+    public function __construct(UserServiceInterface $userService, BankServiceInterface $bankService)
     {
-        $this->userRepository = $userRepository;
-        $this->bankRepository = $bankRepository;
+        $this->userService = $userService;
+        $this->bankService = $bankService;
     }
 
 
@@ -52,7 +52,7 @@ class UserController extends Controller
                 $data = json_decode($request->getContent(), true);
                 $data['url'] = $request->url();
                 $data['user_type_id'] = 1;
-                $out_data = $this->userRepository->userSignUp($data);
+                $out_data = $this->userService->signUp($data);
                 if (!$out_data['success']) {
                     $output['success'] = false;
                     $output['message'] = $out_data['message'];
@@ -68,7 +68,7 @@ class UserController extends Controller
                     'owner_id' => $user['user_id'],
                 ];
 
-                $bank_out_data = $this->bankRepository->createBankProfile($bankData);
+                $bank_out_data = $this->bankService->createBankProfile($bankData);
                 if (!$bank_out_data['success']) {
                     $output['success'] = false;
                     $output['message'] = $bank_out_data['message'];
@@ -79,7 +79,7 @@ class UserController extends Controller
                 $bank = $bank_out_data['data'];
 
                 //update user with bank id
-                $user_out_data = $this->userRepository->updateUser($user['user_id'], ['bank_id' => $bank['id']]);
+                $user_out_data = $this->userService->updateUser($user['user_id'], ['bank_id' => $bank['id']]);
                 if (!$user_out_data['success']) {
                     $output['success'] = false;
                     $output['message'] = $user_out_data['message'];
@@ -117,7 +117,7 @@ class UserController extends Controller
                 //$data = json_decode($request->getContent(), true);
                 $data = $request->all();
                 $data['url'] = $request->url();
-                $out_data = $this->userRepository->userSignIn(data: $data);
+                $out_data = $this->userService->userSignIn(data: $data);
 
                 $output['success'] = $out_data['success'];
                 $output['message'] = $out_data['message'];
@@ -149,7 +149,7 @@ class UserController extends Controller
                     'data' => $validator->errors()
                 ], 400);
             } else {
-                $result = $this->userRepository->generateOTP($request->all());
+                $result = $this->userService->generateOTP($request->all());
                 if (!$result['success']) {
                     return response()->json([
                         'success' => false,
@@ -191,7 +191,7 @@ class UserController extends Controller
                     'data' => $validator->errors()
                 ], 400);
             } else {
-                $result = $this->userRepository->otpVerify($request->all());
+                $result = $this->userService->otpVerify($request->all());
                 if (!$result['success']) {
                     return response()->json([
                         'success' => false,
@@ -278,7 +278,7 @@ class UserController extends Controller
                     'data' => null
                 ]);
             }
-            $result = $this->userRepository->getAllUsers($user['bank_id']);
+            $result = $this->userService->getAllUsers($user['bank_id']);
 
             if (!$result['success']) {
                 return response()->json([
@@ -318,7 +318,7 @@ class UserController extends Controller
                 ], 400);
             }
 
-            $result = $this->userRepository->deleteUser($id);
+            $result = $this->userService->deleteUser($id);
 
             if (!$result['success']) {
                 return response()->json([
@@ -389,7 +389,7 @@ class UserController extends Controller
                 ], 400);
             }
 
-            $result = $this->userRepository->updateUser($id, [
+            $result = $this->userService->updateUser($id, [
                 'full_name' => $full_name,
                 'email_address' => $email_address,
                 'mobile_number' => $mobile_number,
@@ -431,7 +431,7 @@ class UserController extends Controller
     {
         try {
             $id = JwtAuth::user()->id;
-            $result = $this->userRepository->userData($id);
+            $result = $this->userService->userData($id);
             if (!$result['success']) {
                 return response()->json([
                     'success' => false,
@@ -474,7 +474,7 @@ class UserController extends Controller
             $data['is_active'] = 0;
             //check esxisting invitation
 
-            $out_data = $this->userRepository->userSignUp($data);
+            $out_data = $this->userService->userSignUp($data);
             if (!$out_data['success']) {
                 $output['success'] = false;
                 $output['message'] = $out_data['message'];
@@ -492,9 +492,9 @@ class UserController extends Controller
                 'email_address' => $data['email_address']
             ];
             // save invitation 
-            $invitation = $this->userRepository->saveInvitation($inivitationData);
+            $invitation = $this->userService->saveInvitation($inivitationData);
             if (!$invitation['success']) {
-                $this->userRepository->deleteUser($new_user['user_id']);
+                $this->userService->deleteUser($new_user['user_id']);
                 $output['success'] = false;
                 $output['message'] = $invitation['message'];
                 $output['data'] = null;
@@ -549,7 +549,7 @@ class UserController extends Controller
             $data = json_decode($request->getContent(), true);
             Log::info($data);
             //get invitation data
-            $invitation = $this->userRepository->getInvitation($data['token']);
+            $invitation = $this->userService->getInvitation($data['token']);
             if (!$invitation['success']) {
                 $output['success'] = false;
                 $output['message'] = $invitation['message'];
@@ -562,7 +562,7 @@ class UserController extends Controller
             $data['url'] = $request->url();
 
 
-            $out_data = $this->userRepository->updateUser($data['user_id'], $data);
+            $out_data = $this->userService->updateUser($data['user_id'], $data);
             if (!$out_data['success']) {
                 $output['success'] = false;
                 $output['message'] = $out_data['message'];
@@ -570,7 +570,7 @@ class UserController extends Controller
                 return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
             }
 
-            $updatedInviation = $this->userRepository->updateInvitation($invitation['id']);
+            $updatedInviation = $this->userService->updateInvitation($invitation['id']);
             return response()->json([
                 'success' => true,
                 'message' => 'User registered successfully',
@@ -603,7 +603,7 @@ class UserController extends Controller
             $data = json_decode(json: $request->getContent(), associative: true);
             $data['url'] = $request->url();
             //check for user
-            $user = $this->userRepository->getUserByEmail($data['email_address']);
+            $user = $this->userService->getUserByEmail($data['email_address']);
             if (!$user['success']) {
                 return response()->json(data: [
                     'success' => false,
@@ -622,7 +622,7 @@ class UserController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
-            $out_data = $this->userRepository->saveOtp($dto);
+            $out_data = $this->userService->saveOtp($dto);
             if (!$out_data['success']) {
                 return response()->json(data: [
                     'success' => false,
@@ -675,7 +675,7 @@ class UserController extends Controller
             $email = $request->email_address;
             $otp = $request->otp;
 
-            $otpRecord = $this->userRepository->getOtp($email, $otp);
+            $otpRecord = $this->userService->getOtp($email, $otp);
 
             if (!$otpRecord) {
                 return response()->json(data: ['success' => false, 'message' => 'Invalid OTP'], status: 400);
@@ -686,7 +686,7 @@ class UserController extends Controller
             }
 
             // Get user
-            $user = $this->userRepository->getUserByEmail($email);
+            $user = $this->userService->getUserByEmail($email);
             if (!$user['success']) {
                 return response()->json(data: [
                     'success' => false,
@@ -707,7 +707,7 @@ class UserController extends Controller
             }
 
             // OTP is valid → delete it
-            $this->userRepository->deleteOtp($otpRecord->id);
+            $this->userService->deleteOtp($otpRecord->id);
             $data = [
                 'token' => $token,
                 'user' => $user
@@ -740,7 +740,7 @@ class UserController extends Controller
             if ($validator->fails()) {
                 return response()->json(data: ['success' => false, 'message' => 'Validation error', 'data' => $validator->errors()], status: 400);
             }
-            $user = $this->userRepository->getUserByEmail($request->email_address);
+            $user = $this->userService->getUserByEmail($request->email_address);
 
             if (!$user['success']) {
                 return response()->json(data: [
@@ -755,7 +755,7 @@ class UserController extends Controller
             ];
 
             // update password (hashed)
-            $output = $this->userRepository->updateUser(id: $user['id'], data: $updateData);
+            $output = $this->userService->updateUser(id: $user['id'], data: $updateData);
             if (!$output['success']) {
                 return response()->json(data: [
                     'success' => false,
@@ -804,7 +804,7 @@ class UserController extends Controller
                 return response()->json(data: ['success' => false, 'message' => 'Validation error', 'data' => $validator->errors()], status: 400);
             }
             $id = JwtAuth::user()->id;
-            $response = $this->userRepository->updatePassword($id, $request->current_password, $request->new_password);
+            $response = $this->userService->updatePassword($id, $request->current_password, $request->new_password);
             if (!$response['success']) {
                 return response()->json(data: [
                     'success' => false,

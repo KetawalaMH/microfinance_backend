@@ -28,6 +28,12 @@ class UserTypeSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+            [
+                'user_type' => 'Member',
+                'is_active' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ]);
     }
 }
