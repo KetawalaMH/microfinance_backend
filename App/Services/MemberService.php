@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Repositories\Interfaces\MemberRepositoryInterface;
 use App\Services\Interfaces\MemberServiceInterface;
 use App\Services\Interfaces\UserServiceInterface;
+use Log;
 
 class MemberService implements MemberServiceInterface
 {
@@ -41,5 +42,12 @@ class MemberService implements MemberServiceInterface
 
         return $member;
 
+    }
+
+    public function getAllMembers()
+    {
+        $members = $this->memberRepository->getAllMembers();
+
+        return $members;
     }
 }

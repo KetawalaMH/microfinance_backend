@@ -2,6 +2,7 @@
 
 //use Illuminate\Http\Request;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\SavingController;
 use App\Http\Controllers\SettingController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -12,6 +13,7 @@ Route::post(uri: 'auth/user/send-reset-password-otp', action: [UserController::c
 Route::post(uri: 'auth/user/verify-invitation', action: [UserController::class, 'verifyInvitation']);
 Route::post(uri: '/auth/verify-otp', action: [UserController::class, 'verifyOtp']);
 Route::get(uri: '/settings/get-member-types', action: [SettingController::class, 'getMemberTypes']);
+Route::get(uri: '/settings/get-account-types', action: [SettingController::class, 'getAccountTypes']);
 
 Route::group(attributes: ['middleware' => ['jwt.auth']], routes: function (): void {
     Route::post(uri: '/auth/user', action: [UserController::class, 'userData']);
@@ -22,4 +24,6 @@ Route::group(attributes: ['middleware' => ['jwt.auth']], routes: function (): vo
     Route::post(uri: '/auth/user/reset-password', action: [UserController::class, 'resetPassword']);
     Route::post(uri: '/auth/user/update-password', action: [UserController::class, 'updatePassword']);
     Route::post(uri: '/auth/member/add-new-member', action: [MemberController::class, 'createMember']);
+    Route::get(uri: '/auth/member/get-all-members', action: [MemberController::class, 'getAllMembers']);
+    Route::post(uri: '/auth/saving/create-saving-account', action: [SavingController::class, 'createSavingAccount']);
 });
