@@ -36,4 +36,56 @@ class MemberRepository implements MemberRepositoryInterface
 
         return $output;
     }
+
+
+    public function getAllMembers()
+    {
+        try {
+            $members = Member::orderBy('id', 'desc')->get();
+
+            if ($members->isEmpty()) {
+                return [
+                    'success' => false,
+                    'message' => 'No members found.',
+                    'data' => null,
+                ];
+            }
+
+            $formatedMembers = $members->map(function ($member) {
+                return [
+                    'id' => $member->id,
+                    'name' => $member->full_name,
+                    'contact' => $member->mobile_number,
+                    'createdAt' => $member->created_at->format('Y-m-d'),
+                ];
+            });
+
+            $total_members = $members->count();
+            $active_members = $members->where('status', 'active')->count();
+            $inactive_members = $members->where('status', 'inactive')->count();
+            $pending_members = $members->where('status', 'pending')->count();
+
+            return [
+                'success' => true,
+                'message' => 'Members fetched successfully.',
+                'data' => [
+                    'members' => $formatedMembers,
+                    'total_members' => $total_members,
+                    'active_members' => $active_members,
+                    'inactive_members' => $inactive_members,
+                    'pending_members' => $pending_members,
+                ],
+            ];
+        } catch (Exception $e) {
+            $url = 'member/get-all-members';
+            $this->logError($url, $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Something went wrong, please try again later.',
+                'data' => null,
+            ];
+        }
+    }
+
 }

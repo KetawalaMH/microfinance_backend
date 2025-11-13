@@ -21,16 +21,13 @@ class Member extends Model
         'occupation',
         'is_active',
         'member_type_id',
+        'status'
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'dob' => 'date',
     ];
-
-    /**
-     * Relationship: A member belongs to a member type.
-     */
     public function memberType()
     {
         return $this->belongsTo(MemberType::class, 'member_type_id');

@@ -18,4 +18,8 @@ class SettingService implements SettingServiceInterface
     {
         return $this->settingRepository->getMemberTypes();
     }
+    public function getAccountTypes()
+    {
+        return $this->settingRepository->getAccountTypes();
+    }
 }

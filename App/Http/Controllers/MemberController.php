@@ -66,4 +66,32 @@ class MemberController extends Controller
         }
 
     }
+    public function getALlMembers(Request $request): JsonResponse
+    {
+        try {
+            $members = $this->memberService->getALlMembers();
+
+            if ($members['success'] === false) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to fetch members: ' . $members['message'],
+                    'data' => null
+                ], 500);
+            }
+            return response()->json([
+                'success' => true,
+                'message' => 'Members fetched successfully',
+                'data' => $members['data']
+            ], 201);
+
+        } catch (\Exception $e) {
+            Log::info("Hikuna 2");
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create member: ' . $e->getMessage(),
+                'data' => null
+            ], 500);
+        }
+
+    }
 }

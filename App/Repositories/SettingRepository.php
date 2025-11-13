@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Models\AccountType;
 use App\Repositories\Interfaces\SettingRepositoryInterface;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
@@ -78,5 +79,9 @@ class SettingRepository implements SettingRepositoryInterface
     public function getMemberTypes()
     {
         return MemberType::where('is_active', true)->get(['id', 'member_type']);
+    }
+    public function getAccountTypes()
+    {
+        return AccountType::where('is_active', true)->get(['id', 'type_name']);
     }
 }
