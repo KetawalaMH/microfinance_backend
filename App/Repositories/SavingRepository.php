@@ -9,6 +9,20 @@ class SavingRepository implements SavingRepositoryInterface
 {
     public function createSavingAccount(array $data)
     {
-        return SavingAccount::create($data);
+        try {
+            $account = SavingAccount::create($data);
+
+            return [
+                'success' => true,
+                'message' => 'Saving account created successfully',
+                'data' => $account
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
     }
 }

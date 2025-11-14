@@ -55,4 +55,37 @@ class SavingController extends Controller
             'data' => $result['data']
         ], 201);
     }
+
+    public function uploadDocuments(Request $request)
+    {
+        try {
+            $request->validate([
+                'file' => 'required|file|max:5120', // max 5MB
+                'key' => 'required|string',
+                'saving_account_id' => 'required|exists:saving_accounts,id',
+            ]);
+
+            $file = $request->file('file');
+            $key = $request->input('key');
+            $saving_account_id = $request->input('saving_account_id');
+
+            $fileName = $saving_account_id . '_' . $key . '_' . time() . '.' . $file->getClientOriginalExtension();
+
+            $path = $file->storeAs('saving_accounts/' . $saving_account_id, $fileName, 'public');
+
+            $fileUrl = asset('storage/saving_accounts/' . $saving_account_id . '/' . $fileName);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'File uploaded successfully',
+                'data' => ['fileUrl' => $fileUrl]
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ], 500);
+        }
+    }
 }

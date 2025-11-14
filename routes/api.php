@@ -26,4 +26,6 @@ Route::group(attributes: ['middleware' => ['jwt.auth']], routes: function (): vo
     Route::post(uri: '/auth/member/add-new-member', action: [MemberController::class, 'createMember']);
     Route::get(uri: '/auth/member/get-all-members', action: [MemberController::class, 'getAllMembers']);
     Route::post(uri: '/auth/saving/create-saving-account', action: [SavingController::class, 'createSavingAccount']);
+    Route::post(uri: '/auth/saving/upload-documents', action: [SavingController::class, 'uploadDocuments']);
+    Route::post(uri: '/auth/saving/update-saving-account', action: [SavingController::class, 'updateSavingAccount']);
 });
