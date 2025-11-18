@@ -9,19 +9,20 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // $table->dropUnique('users_email_address_unique'); // Drop the unique constraint
-            $table->string('aes_key', 255)->nullable()->after('bank_id');
+            //
         });
     }
 
-    public function down()
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // $table->unique('email_address'); // Add it back if you roll back
-            $table->dropColumn('aes_key');
+            //
         });
     }
 };

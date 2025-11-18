@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('user_type');
             $table->integer('is_active');
             $table->timestamps();
+            $table->string('org');
         });
     }
 

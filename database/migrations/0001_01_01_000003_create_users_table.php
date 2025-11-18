@@ -24,6 +24,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_type_id');
             $table->foreign('user_type_id')->references('id')->on('user_types');
             $table->unsignedBigInteger('bank_id')->nullable();
+            $table->string('org');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
