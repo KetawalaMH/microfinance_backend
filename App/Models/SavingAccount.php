@@ -23,8 +23,10 @@ class SavingAccount extends Model
         'bank_id',
         'NIC_doc',
         'proof_of_address',
-        'deposit_slip',
-        'application_form'
+        'deposite_slip',
+        'application_form',
+        'is_active',
+        'status',
     ];
 
     protected $hidden = [
@@ -35,6 +37,11 @@ class SavingAccount extends Model
     public function member()
     {
         return $this->belongsTo(Member::class, 'member_id');
+    }
+
+    public function accountType()
+    {
+        return $this->belongsTo(AccountType::class, 'account_type_id');
     }
 
 }

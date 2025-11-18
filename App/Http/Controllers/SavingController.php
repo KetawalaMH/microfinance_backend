@@ -88,4 +88,68 @@ class SavingController extends Controller
             ], 500);
         }
     }
+
+    public function updateSavingAccount(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|exists:saving_accounts,id',
+            'NIC_doc' => 'required|string',
+            'proof_of_address' => 'required|string',
+            'deposite_slip' => 'required|string',
+            'application_form' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'data' => null
+            ], 422);
+        }
+        $data = json_decode($request->getContent(), true);
+        $result = $this->savingService->updateSavingAccount($data);
+
+        if ($result['success'] === false) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'],
+                'data' => null
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Saving account updated successfully',
+            'data' => $result['data']
+        ]);
+    }
+
+    public function getSavingAccounts(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'account_type_id' => 'nullable|exists:account_types,id',
+            'status' => 'nullable|in:active,inactive,pending',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'data' => null
+            ], 422);
+        }
+        $filters = $request->only('account_type_id', 'status');
+        $result = $this->savingService->getSavingAccounts($filters);
+        if ($result['success'] === false) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'],
+                'data' => null
+            ], 500);
+        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Saving accounts fetched successfully',
+            'data' => $result['data']
+        ]);
+    }
 }

@@ -30,6 +30,8 @@ return new class extends Migration {
             // ✅ Foreign keys
             $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
             $table->foreign('bank_id')->references('id')->on('bank_profiles')->onDelete('cascade');
+            $table->foreign('member_id')->references('id')->on('members')->onDelete('cascade');
+            $table->foreign('account_type_id')->references('id')->on('account_types')->onDelete('cascade');
 
             $table->string('status')->nullable()->default('draft');
             $table->text('NIC_doc')->nullable();

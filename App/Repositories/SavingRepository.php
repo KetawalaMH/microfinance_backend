@@ -25,4 +25,55 @@ class SavingRepository implements SavingRepositoryInterface
             ];
         }
     }
+
+    public function updateSavingAccount(array $data)
+    {
+        try {
+            SavingAccount::where('id', $data['id'])->update($data);
+
+            $savingAccount = SavingAccount::find($data['id']);
+            return [
+                'success' => true,
+                'message' => 'Saving account updated successfully',
+                'data' => $savingAccount
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    public function getSavingAccounts(array $data)
+    {
+        try {
+            $query = SavingAccount::with(['accountType', 'member']); // <-- add eager loading
+
+            if (isset($data['account_type_id'])) {
+                $query->where('account_type_id', $data['account_type_id']);
+            }
+
+            if (isset($data['status'])) {
+                $query->where('status', $data['status']);
+            }
+
+            $savingAccounts = $query->get();
+
+            return [
+                'success' => true,
+                'message' => 'Saving accounts fetched successfully',
+                'data' => $savingAccounts
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
 }
