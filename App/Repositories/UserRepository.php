@@ -133,58 +133,75 @@ class UserRepository implements UserRepositoryInterface
     {
         try {
             Log::info("message :", $data);
-            //$mobile_number = isset($data['mobile_number']) ? $data['mobile_number'] : null;
-            // $mobile_number = isset($data['mobile_number']) ? trim($data['mobile_number']) : null;
-            $email_address = isset($data['email_address']) ? trim($data['email_address']) : null;
+
+            $email = $data['email_address'] ?? null;
             $password = isset($data['password']) ? $this->decryptText($data['password']) : null;
-            //$user_type_id = isset($data['user_type_id']) ? intval($data['user_type_id']) : 0;
-            $push_id = isset($data['push_id']) ? $data['push_id'] : null;
+            $push_id = $data['push_id'] ?? null;
             $os_type = isset($data['os_type']) ? intval($data['os_type']) : 0;
 
-
-
-            $user = User::where('email_address', $email_address)
-                ->where('is_active', 1)
-                ->orderBy('id', 'desc')->first();
-
-            if (!isset($user->id)) {
-                $output['success'] = false;
-                $output['message'] = "Account does not exist.";
-                $output['data'] = null;
-            } else {
-                if (true) {
-                    /*$sys_type_id = isset($user->user_type_id) ? intval($user->user_type_id) : 0;
-                    if($user_type_id == $sys_type_id) {*/
-                    $credentials['email_address'] = $email_address;
-                    $date_time = date('Y-m-d H:i:s');
-                    $user->password = $password; // Use social password for social login
-                    $user->updated_at = $date_time;
-                    $user->save();
-                    $credentials['password'] = $password; // Use social password for social login
-                    if (!$token = JWTAuth::attempt($credentials)) {
-                        $output['success'] = false;
-                        $output['message'] = "Invalid credentials-Email. Please check & try again.";
-                        $output['data'] = null;
-                    } else {
-                        $output['success'] = true;
-                        $output['message'] = "User sign in success.";
-                        $output['data']['user_id'] = isset($user->id) ? intval($user->id) : 0;
-                        $output['data']['full_name'] = isset($user->full_name) ? $user->full_name : null;
-                        $output['data']['email_address'] = isset($user->email_address) ? $user->email_address : null;
-                        $output['data']['token'] = $token;
-                    }
-                }
+            if (!$email || !$password) {
+                return [
+                    'success' => false,
+                    'message' => "Email or password is missing.",
+                    'data' => null
+                ];
             }
+
+            // Find active user
+            $user = User::with('userType')
+                ->where('email_address', $email)
+                ->where('is_active', 1)
+                ->first();
+
+            if (!$user) {
+                return [
+                    'success' => false,
+                    'message' => "Account does not exist.",
+                    'data' => null
+                ];
+            }
+
+            // Credentials for JWT
+            $credentials = [
+                'email_address' => $email,
+                'password' => $password
+            ];
+
+            // Authenticate
+            if (!$token = JWTAuth::attempt($credentials)) {
+                return [
+                    'success' => false,
+                    'message' => "Invalid credentials. Please check & try again.",
+                    'data' => null
+                ];
+            }
+
+            // Success output
+            return [
+                'success' => true,
+                'message' => "User sign in success.",
+                'data' => [
+                    'user_id' => $user->id,
+                    'full_name' => $user->full_name,
+                    'email_address' => $user->email_address,
+                    'token' => $token,
+                    'user_type_id' => $user->user_type_id,
+                    'role' => $user->userType->user_type
+                ]
+            ];
+
         } catch (\Exception $e) {
-            $url = isset($data['url']) ? $data['url'] : null;
-            $error_message = $e->getMessage();
-            $this->logError($url, $error_message);
-            $output['success'] = false;
-            $output['message'] = "Something went wrong, please try again: " . $e->getMessage();
-            $output['data'] = null;
+
+            $this->logError($data['url'] ?? null, $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => "Something went wrong, please try again: " . $e->getMessage(),
+                'data' => null
+            ];
         }
-        return $output;
     }
+
 
     public function userValidate($data)
     {
