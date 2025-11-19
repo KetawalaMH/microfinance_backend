@@ -219,7 +219,7 @@ class UserRepository implements UserRepositoryInterface
                         Log::error('Fabric registration failed: ' . $fabricResponse->body());
                     }
 
-                    Log::info($fabricResponse);
+                    Log::info($token);
 
                     if (!$token = JWTAuth::attempt($credentials)) {
                         $output['success'] = false;

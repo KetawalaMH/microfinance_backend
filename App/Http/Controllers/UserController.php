@@ -52,7 +52,7 @@ class UserController extends Controller
                 $data = json_decode($request->getContent(), true);
                 $data['url'] = $request->url();
                 $data['user_type_id'] = 1;
-                $out_data = $this->userService->signUp($data);
+                $out_data = $this->userService->userSignUp($data);
                 if (!$out_data['success']) {
                     $output['success'] = false;
                     $output['message'] = $out_data['message'];
