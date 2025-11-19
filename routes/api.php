@@ -15,6 +15,8 @@ Route::post(uri: '/auth/verify-otp', action: [UserController::class, 'verifyOtp'
 Route::get(uri: '/settings/get-member-types', action: [SettingController::class, 'getMemberTypes']);
 Route::get(uri: '/settings/get-account-types', action: [SettingController::class, 'getAccountTypes']);
 
+Route::post(uri: 'auth/user/verification', action: [UserController::class, 'approvalVerification']);
+
 Route::group(attributes: ['middleware' => ['jwt.auth']], routes: function (): void {
     Route::post(uri: '/auth/user', action: [UserController::class, 'userData']);
     Route::get(uri: '/auth/users', action: [UserController::class, 'getAllUsers']);

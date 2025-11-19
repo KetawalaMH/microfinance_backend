@@ -828,5 +828,24 @@ class UserController extends Controller
         }
     }
 
+    public function approvalVerification(Request $request)
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+            $data['url'] = $request->url();
+            Log::info($data);
+            $out_data = $this->userService->approvalVerification($data);
+            $output['success'] = true;
+            $output['data'] = $data;
+            $output['message'] = "Get All User successful";
+        } catch (\Exception $e) {
+            $output['success'] = false;
+            $output['data'] = null;
+            $output['message'] = "Something went wrong, please try again: " . $e->getMessage();
+
+        }
+        return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
+    }
+
 
 }

@@ -90,4 +90,8 @@ class UserService implements UserServiceInterface
     {
         return $this->userRepository->updatePassword($id, $currentPassword, $newPassword);
     }
+
+    public function approvalVerification(array $data){
+        return $this->userRepository->approvalVerification($data);
+    }
 }

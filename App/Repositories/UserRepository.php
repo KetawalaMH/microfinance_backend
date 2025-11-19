@@ -118,7 +118,7 @@ class UserRepository implements UserRepositoryInterface
                 // $token = JWTAuth::fromUser($new_user);
                 $aes_key = $this->generateAESKey($email_address);
 
-                Log::info($caBaseUrl);
+                
 
                 $fabricResponse = Http::post("http://localhost:4000/ca/registerUser", [
                     'org' => $role->org,
@@ -179,7 +179,7 @@ class UserRepository implements UserRepositoryInterface
         try {
             Log::info("message :", $data);
 
-            $email = $data['email_address'] ?? null;
+            $email_address = $data['email_address'] ?? null;
             $password = isset($data['password']) ? $this->decryptText($data['password']) : null;
             $push_id = $data['push_id'] ?? null;
             $os_type = isset($data['os_type']) ? intval($data['os_type']) : 0;
@@ -249,7 +249,7 @@ class UserRepository implements UserRepositoryInterface
 
             // Find active user
             $user = User::with('userType')
-                ->where('email_address', $email)
+                ->where('email_address', $email_address)
                 ->where('is_active', 1)
                 ->first();
 
@@ -263,7 +263,7 @@ class UserRepository implements UserRepositoryInterface
 
             // Credentials for JWT
             $credentials = [
-                'email_address' => $email,
+                'email_address' => $email_address,
                 'password' => $password
             ];
 
@@ -753,6 +753,59 @@ class UserRepository implements UserRepositoryInterface
                 'message' => 'Something went wrong, please try again',
                 'data' => null
             ];
+        }
+    }
+
+    public function approvalVerification(array $data): array
+    {
+        try{
+            $email_address = $data['email_address'] ?? null;
+
+            $user = User::where('email_address', $email_address)
+                ->where('is_active', 1)
+                ->orderBy('id', 'desc')->first();
+            Log::info('user', ['user' => $user]);
+
+
+            $fabricResponse = Http::post("http://localhost:4000/ca/approve", [
+                'approvalData'=>$data['approvalData'],
+                'userId'=>$user->full_name,
+                'signature'=>$data['signature'],
+                'aesKey'=>$user->aes_key,
+                'org'=>$user->org
+            ]);
+
+            if ($fabricResponse->failed()) {
+                $output['success'] = false;
+                $output['message'] = 'Fabric verifiaction failed: ' . $fabricResponse->body();
+                $output['data'] = null;
+                Log::error('Fabric verifiaction failed: ' . $fabricResponse->body());
+            }
+
+            Log::info($fabricResponse);
+
+            if($fabricResponse->status() == 200){
+
+                $responseData = $fabricResponse->json();
+
+
+                $output['success'] = true;
+                $output['message'] = "User verified.";
+
+            } else{
+                $output['success'] = false;
+                $output['message'] = "Authentication block from blockchain";
+                $output['data'] = null;
+            }
+        }catch(\Exception $e){
+            \Log::error('role verification fail: ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Something went wrong, please try again',
+                'data' => null
+            ];
+        
         }
     }
 

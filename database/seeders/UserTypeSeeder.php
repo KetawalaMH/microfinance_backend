@@ -43,6 +43,7 @@ class UserTypeSeeder extends Seeder
                 'is_active' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
+                'org' => 'org2'
             ],
         ]);
     }
