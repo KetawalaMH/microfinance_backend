@@ -324,7 +324,7 @@ class UserRepository implements UserRepositoryInterface
                     //     Log::error('Fabric registration failed: ' . $fabricResponse->body());
                     // }
 
-                    // Log::info($fabricResponse);
+                    Log::info($fabricResponse);
 
                     if (!$token = JWTAuth::attempt($credentials)) {
                         $output['success'] = false;
@@ -861,7 +861,7 @@ class UserRepository implements UserRepositoryInterface
         }
     }
 
-    public function approvalVerification(array $data): array
+    public function approvalVerification(array $data)
     {
         try {
             $email_address = $data['email_address'] ?? null;

@@ -52,7 +52,7 @@ class UserController extends Controller
                 $data = json_decode($request->getContent(), true);
                 $data['url'] = $request->url();
                 $data['user_type_id'] = 1;
-                $out_data = $this->userService->signUp($data);
+                $out_data = $this->userService->userSignUp($data);
                 if (!$out_data['success']) {
                     $output['success'] = false;
                     $output['message'] = $out_data['message'];
@@ -839,7 +839,7 @@ class UserController extends Controller
             $out_data = $this->userService->approvalVerification($data);
             $output['success'] = true;
             $output['data'] = $data;
-            $output['message'] = "Get All User successful";
+            $output['message'] = "user approved";
         } catch (\Exception $e) {
             $output['success'] = false;
             $output['data'] = null;
