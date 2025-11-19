@@ -9,4 +9,7 @@ interface SettingRepositoryInterface
     public function getMemberTypes();
     public function getAccountTypes();
 
+    public function getDepartmntId($name);
+    public function getBranchId($name);
+
 }

@@ -5,7 +5,7 @@ namespace App\Services\Interfaces;
 
 interface UserServiceInterface
 {
-    public function signUp(array $data);
+    public function userSignUp(array $data);
     public function userSignIn(array $data);
     public function userValidate(array $data);
     public function getAllUsers(array $data);
@@ -20,4 +20,8 @@ interface UserServiceInterface
     public function getOtp(string $email, string $otp);
     public function deleteOtp($id);
     public function updatePassword(string $id, string $currentPassword, string $newPassword);
+
+    public function addUserBulk(array $data);
+
+    public function userData($id);
 }
