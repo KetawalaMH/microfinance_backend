@@ -28,4 +28,6 @@ interface UserRepositoryInterface
     public function saveInvitation($data);
     public function getInvitation($data);
 
+    public function addUserBulk(array $data);
+
 }

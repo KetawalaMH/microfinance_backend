@@ -22,6 +22,7 @@ return new class extends Migration {
             $table->boolean('is_active')->default(true);
             $table->foreignId('member_type_id')->constrained('member_types')->onDelete('cascade');
             $table->timestamps();
+            $table->enum('status', ['active', 'inactive', 'pending'])->default('pending');
         });
     }
 

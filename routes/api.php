@@ -18,11 +18,12 @@ Route::get(uri: '/settings/get-account-types', action: [SettingController::class
 Route::post(uri: 'auth/user/verification', action: [UserController::class, 'approvalVerification']);
 
 Route::group(attributes: ['middleware' => ['jwt.auth']], routes: function (): void {
-    Route::post(uri: '/auth/user', action: [UserController::class, 'userData']);
+    Route::get(uri: '/auth/user', action: [UserController::class, 'userData']);
     Route::get(uri: '/auth/users', action: [UserController::class, 'getAllUsers']);
     Route::post(uri: '/auth/users/delete', action: [UserController::class, 'deleteUser']);
     Route::post(uri: '/auth/users/update', action: [UserController::class, 'updateUser']);
     Route::post(uri: '/auth/users/invite', action: [UserController::class, 'inviteUser']);
+    Route::post(uri: '/auth/user/add-user-bulk', action: [UserController::class, 'addUserBulk']);
     Route::post(uri: '/auth/user/reset-password', action: [UserController::class, 'resetPassword']);
     Route::post(uri: '/auth/user/update-password', action: [UserController::class, 'updatePassword']);
     Route::post(uri: '/auth/member/add-new-member', action: [MemberController::class, 'createMember']);

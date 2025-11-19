@@ -24,30 +24,18 @@ class User extends Authenticatable implements JWTSubject
         'full_name',
         'email_address',
         'mobile_number',
-        // 'nic_number',
-        // 'address_line1',
-        // 'address_line2',
-        // 'city_id',
-        // 'district_id',
-        // 'province_id',
-        // 'login_type',
         'password',
-        // 'normal_password',
-        // 'social_password',
-        //'push_id',
-        //'os_type',
-        // 'memory_count',
-        // 'moment_count',
-        // 'storage',
-        // 'used_storage',
         'is_active',
         'created_at',
         'updated_at',
-        'bank_id',
         'aes_key',
-        'org'
+        'org',
+        'member_id',
+        'department_id',
+        'branch_id',
+        'nic'
     ];
-    
+
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -75,11 +63,10 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->getKey();
     }
-    
+
     public function getJWTCustomClaims()
     {
         return [
-            'bank_id' => $this->bank_id,
             'user_type_id' => $this->user_type_id,
         ];
     }
@@ -88,8 +75,19 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->belongsTo(UserType::class, 'user_type_id');
     }
-    public function bankId()
+
+    public function member()
     {
-        return $this->belongsTo(BankProfile::class, 'bank_id');
+        return $this->belongsTo(Member::class, 'member_id');
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class, 'department_id');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
     }
 }

@@ -460,6 +460,8 @@ class UserController extends Controller
                 'email_address' => 'required|email',
                 'full_name' => 'required|string|min:1|max:255',
                 'user_type_id' => 'required|integer',
+                'branch_id' => 'required|integer|exists:branches,id',
+                'department_id' => 'required|integer|exists:departments,id',
             ]);
 
             if ($validator->fails()) {
@@ -487,7 +489,7 @@ class UserController extends Controller
             $inivitationData = [
                 'user_id' => $new_user['user_id'],
                 'sent_by' => JwtAuth::user()->id,
-                'bank_id' => JwtAuth::user()->bank_id,
+                'branch_id' => JwtAuth::user()->branch_id,
                 'token' => $new_user['token'],
                 'email_address' => $data['email_address']
             ];
@@ -846,6 +848,86 @@ class UserController extends Controller
         }
         return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
     }
+
+    public function addUserBulk(Request $request)
+    {
+        try {
+            // Validate CSV file
+            $validator = Validator::make($request->all(), [
+                'file' => 'required|mimes:csv,txt|max:2048',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation error',
+                    'data' => $validator->errors(),
+                ], 422);
+            }
+
+            // Read CSV file
+            $file = $request->file('file');
+            $rows = array_map('str_getcsv', file($file->getRealPath()));
+
+            $header = array_map('trim', $rows[0]); // first row = headers
+            unset($rows[0]); // remove header
+
+            $validatedUsers = [];
+            $errors = [];
+            $rowNumber = 1;
+
+            foreach ($rows as $row) {
+                $rowNumber++;
+
+                $userData = array_combine($header, $row); // map row to header keys
+
+                // Validation rules for each user
+                $rowValidator = Validator::make($userData, [
+                    'full_name' => 'required|string|max:255',
+                    'email_address' => 'required|email|unique:users,email',
+                    'mobile_number' => 'nullable|string',
+                    'nic' => 'nullable|string|unique:users,nic',
+                    'department' => 'required|string|exists:departments,department',
+                    'branch' => 'required|string|exists:branches,branch',
+                ]);
+
+                if ($rowValidator->fails()) {
+                    $errors[] = [
+                        'row' => $rowNumber,
+                        'errors' => $rowValidator->errors()->all()
+                    ];
+                    continue;
+                }
+
+                $validatedUsers[] = $userData;
+            }
+
+            // If any errors found, return them
+            if (!empty($errors)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Some rows contain invalid data',
+                    'errors' => $errors
+                ], 422);
+            }
+
+            // Send validated data to service layer
+            $this->userService->addUserBulk($validatedUsers);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'All users added successfully',
+                'data' => null
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
 
 
 }

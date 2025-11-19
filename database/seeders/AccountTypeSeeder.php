@@ -16,7 +16,6 @@ class AccountTypeSeeder extends Seeder
         // Develop account type seeder with four account types
         $accountTypes = [
             [
-                'bank_id' => 1,
                 'type_name' => 'Savings Account',
                 'type_description' => 'A basic savings account with competitive interest for individuals.',
                 'interest_rate' => 3.50,
@@ -34,7 +33,6 @@ class AccountTypeSeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                'bank_id' => 1,
                 'type_name' => 'Fixed Deposit',
                 'type_description' => 'Long-term fixed deposit account offering higher interest rates.',
                 'interest_rate' => 8.25,
@@ -52,7 +50,6 @@ class AccountTypeSeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                'bank_id' => 2,
                 'type_name' => 'Senior Citizen Savings',
                 'type_description' => 'Special savings account designed for senior citizens with higher interest rates.',
                 'interest_rate' => 6.50,
@@ -70,7 +67,6 @@ class AccountTypeSeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                'bank_id' => 3,
                 'type_name' => 'Student Savings Account',
                 'type_description' => 'Account for students with zero maintenance charges and flexible deposits.',
                 'interest_rate' => 4.00,
