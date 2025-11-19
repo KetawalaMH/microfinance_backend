@@ -84,14 +84,16 @@ class UserRepository implements UserRepositoryInterface
     public function userSignUp(array $data)
     {
         try {
-            $full_name = isset($data['full_name']) ? $data['full_name'] : null;
-            $email_address = isset($data['email_address']) ? $data['email_address'] : null;
-            $password = isset($data['password']) ? $data['password'] : null;
+            $full_name = $data['full_name'] ?? null;
+            $email_address = $data['email_address'] ?? null;
+            $password = $data['password'] ?? null;
             $user_type_id = isset($data['user_type_id']) ? intval($data['user_type_id']) : 4;
             $is_active = isset($data['is_active']) ? boolval($data['is_active']) : 1;
-            $mobile = isset($data['mobile_number']) ? $data['mobile_number'] : 00000000;
-            $branch_id = isset($data['branch_id']) ? $data['branch_id'] : null;
-            $department_id = isset($data['department_id']) ? $data['department_id'] : null;
+            $mobile = $data['mobile_number'] ?? "00000000";
+            $branch_id = $data['branch_id'] ?? null;
+            $department_id = $data['department_id'] ?? null;
+
+
 
             $is_email_exist = User::where('email_address', $email_address)
                 ->where('is_active', 1)
@@ -115,52 +117,68 @@ class UserRepository implements UserRepositoryInterface
                     $output['data'] = null;
                 }
 
-                // Generate JWT token
-                // $token = JWTAuth::fromUser($new_user);
                 $aes_key = $this->generateAESKey($email_address);
 
-                $fabricResponse = Http::post("http://localhost:4000/ca/registerUser", [
+                $new_user = User::create([
+                    'user_type_id' => $user_type_id,
+                    'full_name' => $full_name,
+                    'email_address' => $email_address,
+                    'mobile_number' => $mobile,
+                    'password' => Hash::make($password),
+                    'is_active' => $is_active,
+                    'created_at' => $date_time,
+                    'updated_at' => $date_time,
+                    'aes_key' => $aes_key,
                     'org' => $role->org,
-                    'userId' => $full_name,
-                    'role' => $role->user_type,
-                    'affiliation' => 'org2.department1',
-                    'aesKey' => $aes_key
+                    'branch_id' => $branch_id,
+                    'department_id' => $department_id
                 ]);
+                // Generate JWT token
+                $token = JWTAuth::fromUser($new_user);
 
-                if ($fabricResponse->failed()) {
-                    $output['success'] = false;
-                    $output['message'] = 'Fabric registration failed: ' . $fabricResponse->body();
-                    $output['data'] = null;
-                    Log::error('Fabric registration failed: ' . $fabricResponse->body());
-                }
 
-                Log::info($fabricResponse);
+                // $fabricResponse = Http::post("http://localhost:4000/ca/registerUser", [
+                //     'org' => $role->org,
+                //     'userId' => $full_name,
+                //     'role' => $role->user_type,
+                //     'affiliation' => 'org2.department1',
+                //     'aesKey' => $aes_key
+                // ]);
 
-                if ($fabricResponse->status() == 200) {
+                // if ($fabricResponse->failed()) {
+                //     $output['success'] = false;
+                //     $output['message'] = 'Fabric registration failed: ' . $fabricResponse->body();
+                //     $output['data'] = null;
+                //     Log::error('Fabric registration failed: ' . $fabricResponse->body());
+                // }
 
-                    $new_user = User::create([
-                        'user_type_id' => $user_type_id,
-                        'full_name' => $full_name,
-                        'email_address' => $email_address,
-                        'mobile_number' => $mobile,
-                        'password' => Hash::make($password),
-                        'is_active' => $is_active,
-                        'created_at' => $date_time,
-                        'updated_at' => $date_time,
-                        'aes_key' => $aes_key,
-                        'org' => $role->org,
-                        'branch_id' => $branch_id,
-                        'department_id' => $department_id
-                    ]);
+                // Log::info($fabricResponse);
 
-                    $output['success'] = true;
-                    $output['message'] = "User sign up success";
-                    $output['data']['user_id'] = isset($new_user->id) ? intval($new_user->id) : 0;
-                    $output['data']['full_name'] = isset($new_user->full_name) ? $new_user->full_name : null;
-                    $output['data']['email_address'] = isset($new_user->email_address) ? $new_user->email_address : null;
-                    // $output['data']['token'] = $token;
+                // if ($fabricResponse->status() == 200) {
 
-                }
+                //     $new_user = User::create([
+                //         'user_type_id' => $user_type_id,
+                //         'full_name' => $full_name,
+                //         'email_address' => $email_address,
+                //         'mobile_number' => $mobile,
+                //         'password' => Hash::make($password),
+                //         'is_active' => $is_active,
+                //         'created_at' => $date_time,
+                //         'updated_at' => $date_time,
+                //         'aes_key' => $aes_key,
+                //         'org' => $role->org,
+                //         'branch_id' => $branch_id,
+                //         'department_id' => $department_id
+                //     ]);
+
+                $output['success'] = true;
+                $output['message'] = "User sign up success";
+                $output['data']['user_id'] = isset($new_user->id) ? intval($new_user->id) : 0;
+                $output['data']['full_name'] = isset($new_user->full_name) ? $new_user->full_name : null;
+                $output['data']['email_address'] = isset($new_user->email_address) ? $new_user->email_address : null;
+                $output['data']['token'] = $token;
+
+                // }
             }
         } catch (\Exception $e) {
             $url = isset($data['url']) ? $data['url'] : null;
@@ -172,6 +190,93 @@ class UserRepository implements UserRepositoryInterface
         }
         return $output;
     }
+
+    // public function userSignUp(array $data)
+    // {
+    //     try {
+    //         // Sanitize Inputs
+    //         $full_name = $data['full_name'] ?? null;
+    //         $email_address = $data['email_address'] ?? null;
+    //         $password = $data['password'] ?? null;
+    //         $user_type_id = isset($data['user_type_id']) ? intval($data['user_type_id']) : 4;
+    //         $is_active = isset($data['is_active']) ? boolval($data['is_active']) : 1;
+    //         $mobile = $data['mobile_number'] ?? "00000000";
+    //         $branch_id = $data['branch_id'] ?? null;
+    //         $department_id = $data['department_id'] ?? null;
+
+    //         // Check if email exists
+    //         $is_email_exist = User::where('email_address', $email_address)
+    //             ->where('is_active', 1)
+    //             ->first();
+
+    //         if ($is_email_exist) {
+    //             return [
+    //                 'success' => false,
+    //                 'message' => "The email address you've entered is already associated with an existing account!",
+    //                 'data' => null
+    //             ];
+    //         }
+
+    //         // Validate user role
+    //         $role = UserType::find($user_type_id);
+    //         if (!$role) {
+    //             return [
+    //                 'success' => false,
+    //                 'message' => "Invalid user type provided!",
+    //                 'data' => null
+    //             ];
+    //         }
+
+    //         if ($role->is_active == 0) {
+    //             return [
+    //                 'success' => false,
+    //                 'message' => "This account type creation is blocked!",
+    //                 'data' => null
+    //             ];
+    //         }
+
+    //         // Generate AES Key
+    //         $aes_key = $this->generateAESKey($email_address);
+
+    //         // Create user (since fabric block is commented)
+    //         $new_user = User::create([
+    //             'user_type_id' => $user_type_id,
+    //             'full_name' => $full_name,
+    //             'email_address' => $email_address,
+    //             'mobile_number' => $mobile,
+    //             'password' => Hash::make($password),
+    //             'is_active' => $is_active,
+    //             'aes_key' => $aes_key,
+    //             'org' => $role->org,
+    //             'branch_id' => $branch_id,
+    //             'department_id' => $department_id,
+    //             'created_at' => now(),
+    //             'updated_at' => now()
+    //         ]);
+
+    //         $token = JWTAuth::fromUser($new_user);
+
+    //         return [
+    //             'success' => true,
+    //             'message' => "User sign up success",
+    //             'data' => [
+    //                 'user_id' => $new_user->id,
+    //                 'full_name' => $new_user->full_name,
+    //                 'email_address' => $new_user->email_address
+    //             ]
+    //         ];
+
+    //     } catch (\Exception $e) {
+    //         $this->logError($data['url'] ?? null, $e->getMessage());
+
+    //         return [
+    //             'success' => false,
+    //             'message' => "Something went wrong, please try again: " . $e->getMessage(),
+    //             'data' => null
+    //         ];
+    //     }
+    // }
+
 
     public function userSignIn(array $data)
     {
@@ -206,42 +311,42 @@ class UserRepository implements UserRepositoryInterface
                     $user->save();
                     $credentials['password'] = $password; // Use social password for social login
 
-                    $fabricResponse = Http::post('http://localhost:4000/ca/login', [
-                        'org' => $user->org,
-                        'userId' => $user->full_name,
-                        'aeskey' => $user->aes_key
-                    ]);
+                    // $fabricResponse = Http::post('http://localhost:4000/ca/login', [
+                    //     'org' => $user->org,
+                    //     'userId' => $user->full_name,
+                    //     'aeskey' => $user->aes_key
+                    // ]);
 
-                    if ($fabricResponse->failed()) {
-                        $output['success'] = false;
-                        $output['message'] = 'Fabric registration failed: ' . $fabricResponse->body();
-                        $output['data'] = null;
-                        Log::error('Fabric registration failed: ' . $fabricResponse->body());
-                    }
+                    // if ($fabricResponse->failed()) {
+                    //     $output['success'] = false;
+                    //     $output['message'] = 'Fabric registration failed: ' . $fabricResponse->body();
+                    //     $output['data'] = null;
+                    //     Log::error('Fabric registration failed: ' . $fabricResponse->body());
+                    // }
 
-                    Log::info($fabricResponse);
+                    // Log::info($fabricResponse);
 
                     if (!$token = JWTAuth::attempt($credentials)) {
                         $output['success'] = false;
                         $output['message'] = "Invalid credentials-Email. Please check & try again.";
                         $output['data'] = null;
                     } else {
-                        if ($fabricResponse->status() == 200) {
+                        // if ($fabricResponse->status() == 200) {
 
-                            $responseData = $fabricResponse->json();
-                            $fabricToken = $responseData['message']['token'] ?? null;
+                        //     $responseData = $fabricResponse->json();
+                        //     $fabricToken = $responseData['message']['token'] ?? null;
 
-                            $output['success'] = true;
-                            $output['message'] = "User sign in success.";
-                            $output['data']['user_id'] = isset($user->id) ? intval($user->id) : 0;
-                            $output['data']['full_name'] = isset($user->full_name) ? $user->full_name : null;
-                            $output['data']['email_address'] = isset($user->email_address) ? $user->email_address : null;
-                            $output['data']['token'] = $fabricToken;
-                        } else {
-                            $output['success'] = false;
-                            $output['message'] = "Authentication block from blockchain";
-                            $output['data'] = null;
-                        }
+                        //     $output['success'] = true;
+                        //     $output['message'] = "User sign in success.";
+                        //     $output['data']['user_id'] = isset($user->id) ? intval($user->id) : 0;
+                        //     $output['data']['full_name'] = isset($user->full_name) ? $user->full_name : null;
+                        //     $output['data']['email_address'] = isset($user->email_address) ? $user->email_address : null;
+                        //     $output['data']['token'] = $fabricToken;
+                        // } else {
+                        //     $output['success'] = false;
+                        //     $output['message'] = "Authentication block from blockchain";
+                        //     $output['data'] = null;
+                        // }
                     }
                 }
             }
