@@ -756,7 +756,7 @@ class UserRepository implements UserRepositoryInterface
         }
     }
 
-    public function approvalVerification(array $data): array
+    public function approvalVerification(array $data)
     {
         try{
             $email_address = $data['email_address'] ?? null;
