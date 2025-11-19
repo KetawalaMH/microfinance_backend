@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -14,8 +13,8 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('full_name');
-            $table->string('email_address')->unique();
-            $table->string('mobile_number')->unique();
+            $table->string('email_address');
+            $table->string('mobile_number');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->boolean('is_active')->default(true);
@@ -23,7 +22,13 @@ return new class extends Migration
             $table->timestamps();
             $table->unsignedBigInteger('user_type_id');
             $table->foreign('user_type_id')->references('id')->on('user_types');
-            $table->unsignedBigInteger('bank_id')->nullable();
+            $table->string('org');
+            $table->string('nic')->unique();
+            $table->foreignId('member_id')
+                ->nullable()
+                ->constrained('members');
+            $table->foreignId('department_id')->nullable()->references('id')->on('departments');
+            $table->foreignId('branch_id')->nullable()->references('id')->on('branches');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

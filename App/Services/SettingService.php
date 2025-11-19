@@ -22,4 +22,13 @@ class SettingService implements SettingServiceInterface
     {
         return $this->settingRepository->getAccountTypes();
     }
+
+    public function getDepartmntId($name)
+    {
+        return $this->settingRepository->getDepartmntId($name);
+    }
+    public function getBranchId($name)
+    {
+        return $this->settingRepository->getBranchId($name);
+    }
 }

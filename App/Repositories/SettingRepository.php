@@ -3,6 +3,8 @@
 namespace App\Repositories;
 
 use App\Models\AccountType;
+use App\Models\Branch;
+use App\Models\Department;
 use App\Repositories\Interfaces\SettingRepositoryInterface;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
@@ -83,5 +85,14 @@ class SettingRepository implements SettingRepositoryInterface
     public function getAccountTypes()
     {
         return AccountType::where('is_active', true)->get(['id', 'type_name']);
+    }
+
+    public function getDepartmntId($name)
+    {
+        return Department::where('department', $name)->first()->id;
+    }
+    public function getBranchId($name)
+    {
+        return Branch::where('branch', $name)->first()->id;
     }
 }
