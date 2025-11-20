@@ -68,4 +68,9 @@ class SavingService implements SavingServiceInterface
             ];
         }
     }
+
+    public function getSavingAccountById($id)
+    {
+        return $this->repository->getSavingAccountById($id);
+    }
 }

@@ -24,7 +24,7 @@ class TransactionController extends Controller
             'error' => $error_message
         ]);
     }
-    public function create(Request $request)
+    public function createTransaction(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'account_id' => 'required|exists:saving_accounts,id',
@@ -43,7 +43,7 @@ class TransactionController extends Controller
             $data = $request->all();
             $data['recorded_by'] = JWTAuth::user()->id;
 
-            $transaction = $this->transactionService->createTransaction($request->all());
+            $transaction = $this->transactionService->createTransaction($data);
 
             return response()->json(['data' => $transaction], 201);
         } catch (Exception $e) {

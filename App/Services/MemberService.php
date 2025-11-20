@@ -35,7 +35,7 @@ class MemberService implements MemberServiceInterface
             'email_address' => $member->email_address,
             'password' => $member->NIC
         ];
-        $user = $this->userService->signUp($userData);
+        $user = $this->userService->userSignUp($userData);
         if ($user['success'] === false) {
             return $user;
         }

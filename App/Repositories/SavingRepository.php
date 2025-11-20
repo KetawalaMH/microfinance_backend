@@ -76,4 +76,29 @@ class SavingRepository implements SavingRepositoryInterface
         }
     }
 
+    public function getSavingAccountById($id)
+    {
+        try {
+            $savingAccount = SavingAccount::find($id);
+            if (!$savingAccount) {
+                return [
+                    'success' => false,
+                    'message' => 'Saving account not found',
+                    'data' => null
+                ];
+            }
+            return [
+                'success' => true,
+                'message' => 'Saving account fetched successfully',
+                'data' => $savingAccount
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
 }
