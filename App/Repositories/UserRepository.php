@@ -118,6 +118,22 @@ class UserRepository implements UserRepositoryInterface
                 // Generate JWT token
                 // $token = JWTAuth::fromUser($new_user);
                 $aes_key = $this->generateAESKey($email_address);
+                // $new_user = User::create([
+                //     'user_type_id' => $user_type_id,
+                //     'full_name' => $full_name,
+                //     'email_address' => $email_address,
+                //     'mobile_number' => $mobile,
+                //     'password' => Hash::make($password),
+                //     'is_active' => $is_active,
+                //     'created_at' => $date_time,
+                //     'updated_at' => $date_time,
+                //     'aes_key' => $aes_key,
+                //     'org' => $role->org,
+                //     'branch_id' => $branch_id,
+                //     'department_id' => $department_id
+                // ]);
+
+                // $token = JWTAuth::fromUser($new_user);
 
                 $fabricResponse = Http::post("http://localhost:4000/ca/registerUser", [
                     'org' => $role->org,

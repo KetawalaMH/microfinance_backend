@@ -8,5 +8,5 @@ interface SettingServiceInterface
     public function getAccountTypes();
 
     public function getDepartmntId($name);
-    public function getBranchId($name);
+    public function getBranchId($branch_code);
 }
