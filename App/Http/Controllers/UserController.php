@@ -837,9 +837,10 @@ class UserController extends Controller
             $data['url'] = $request->url();
             Log::info($data);
             $out_data = $this->userService->approvalVerification($data);
-            $output['success'] = true;
+             Log::info('responseC', $out_data);
+            $output['success'] = $out_data['success'];
             $output['data'] = $data;
-            $output['message'] = "user approved";
+            $output['message'] = $out_data['message'];
         } catch (\Exception $e) {
             $output['success'] = false;
             $output['data'] = null;

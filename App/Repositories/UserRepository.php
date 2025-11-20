@@ -818,57 +818,60 @@ class UserRepository implements UserRepositoryInterface
     }
 
     public function approvalVerification(array $data)
-    {
-        try {
-            $email_address = $data['email_address'] ?? null;
+{
+    try {
+        $email_address = $data['email_address'] ?? null;
 
-            $user = User::where('email_address', $email_address)
-                ->where('is_active', 1)
-                ->orderBy('id', 'desc')->first();
-            Log::info('user', ['user' => $user]);
+        $user = User::where('email_address', $email_address)
+            ->where('is_active', 1)
+            ->orderBy('id', 'desc')
+            ->first();
 
+        Log::info('user', ['user' => $user]);
 
-            $fabricResponse = Http::post("http://localhost:4000/ca/approve", [
-                'approvalData' => $data['approvalData'],
-                'userId' => $user->full_name,
-                'signature' => $data['signature'],
-                'aesKey' => $user->aes_key,
-                'org' => $user->org
-            ]);
+        $fabricResponse = Http::post("https://6f64f94eb271.ngrok-free.app/ca/approve", [
+            'approvalData' => $data['approvalData'] ?? null,
+            'userId' => $user->full_name,
+            'signature' => $data['signature'] ?? null,
+            'aesKey' => $user->aes_key,
+            'org' => $user->org
+        ]);
 
-            if ($fabricResponse->failed()) {
-                $output['success'] = false;
-                $output['message'] = 'Fabric verifiaction failed: ' . $fabricResponse->body();
-                $output['data'] = null;
-                Log::error('Fabric verifiaction failed: ' . $fabricResponse->body());
-            }
+        $fabricBody = $fabricResponse->json();  // <-- JSON body
+        Log::info('fabric response', $fabricBody);
 
-            Log::info($fabricResponse);
-
-            if ($fabricResponse->status() == 200) {
-
-                $responseData = $fabricResponse->json();
-
-
-                $output['success'] = true;
-                $output['message'] = "User verified.";
-
-            } else {
-                $output['success'] = false;
-                $output['message'] = "Authentication block from blockchain";
-                $output['data'] = null;
-            }
-        } catch (\Exception $e) {
-            \Log::error('role verification fail: ' . $e->getMessage());
+        // -------------------------
+        // CHECK FABRIC CODE HERE
+        // -------------------------
+        if (!isset($fabricBody['code']) || $fabricBody['code'] != 200) {
 
             return [
                 'success' => false,
-                'message' => 'Something went wrong, please try again',
-                'data' => null
+                'message' => 'Fabric verification failed',
+                'fabric_code' => $fabricBody['code'] ?? null,
+                'fabric_message' => $fabricBody['message'] ?? null,
             ];
-
         }
+
+        // if code is 200
+        return [
+            'success' => true,
+            'message' => 'User verified successfully',
+            'fabric_message' => $fabricBody['message']
+        ];
+
+    } catch (\Exception $e) {
+
+        Log::error('approval verification failed: ' . $e->getMessage());
+
+        return [
+            'success' => false,
+            'message' => 'Something went wrong, please try again',
+            'data' => null
+        ];
     }
+}
+
 
     private function generateAESKey(string $email): string
     {
