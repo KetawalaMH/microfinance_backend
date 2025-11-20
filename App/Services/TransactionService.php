@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
+use App\Models\SavingAccount;
 use App\Models\Transaction;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Services\Interfaces\SavingServiceInterface;
+use App\Services\Interfaces\TransactionServiceInterface;
 use Log;
 
-class TransactionService
+class TransactionService implements TransactionServiceInterface
 {
     protected $transactionRepository;
     protected $savingService;
@@ -29,12 +31,20 @@ class TransactionService
     public function createTransaction(array $data)
     {
         try {
-            $account = $this->savingService->getSavingAccounts(['id' => $data['account_id']]);
-            if ($account['success'] === false) {
-                return $account;
+            // Fetch account
+            $result = $this->savingService->getSavingAccountById($data['account_id']);
+
+            if ($result['success'] === false) {
+                return $result;
             }
-            $currrentBalance = $account['data'][0]->balance;
-            $updatedBalance = $account['data'][0]->balance;
+
+            /** @var SavingAccount $account */
+            $account = $result['data']; // This is a model object
+
+            // Current balance
+            $updatedBalance = $account->current_balance;
+
+            // Apply transaction
             if ($data['type'] === 'deposite') {
                 $updatedBalance += $data['amount'];
             } else if ($data['type'] === 'withdraw') {
@@ -42,24 +52,41 @@ class TransactionService
             } else if ($data['type'] === 'interest') {
                 $updatedBalance += $data['amount'];
             }
-            $data['account_id'] = $account['data'][0]->id;
+
+            // Prepare data for creating transaction
+            $data['account_id'] = $account->id;
             $data['balance'] = $updatedBalance;
+            $data['confirmed_by'] = null;
+
+            // Create transaction
             $response = $this->transactionRepository->createTransaction($data);
+
             if (!$response['success']) {
+                Log::error('Transaction failed');
                 return $response;
             }
-            $savingAccout = $this->savingService->updateSavingAccount(['id' => $account['data'][0]->id, 'current_balance' => $updatedBalance]);
-            if (!$savingAccout['success']) {
-                $this->transactionRepository->updateTransaction($response['data']->id, ['is_active' => 'false']);
-                return $savingAccout;
+
+            Log::info('Transaction created');
+
+            // Now update the saving account balance
+            $savingUpdate = $this->savingService->updateSavingAccount([
+                'id' => $account->id,
+                'current_balance' => $updatedBalance
+            ]);
+
+            if (!$savingUpdate['success']) {
+                // Rollback - deactivate transaction
+                $this->transactionRepository->updateTransaction($response['data']->id, ['is_active' => false]);
+                return $savingUpdate;
             }
+
             return $response;
+
         } catch (\Exception $e) {
-            $url = "transactions";
-            $this->logError($url, $e->getMessage());
+            $this->logError("transactions", $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => "Something went wrong, please try again: " . $e->getMessage()
+                'message' => "Something went wrong: " . $e->getMessage()
             ], 500);
         }
     }

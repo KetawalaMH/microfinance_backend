@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'blockchain' => [
+        'url' => env('BLOCK_CHAIN_BASE_URL'),
+    ],
+
 ];
