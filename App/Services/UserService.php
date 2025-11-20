@@ -108,12 +108,21 @@ class UserService implements UserServiceInterface
         try {
             for ($i = 0; $i < count($data); $i++) {
                 $department_id = $this->settingService->getDepartmntId($data[$i]['department']);
-                $branch_id = $this->settingService->getBranchId($data[$i]['branch']);
+                $branch_id = $this->settingService->getBranchId($data[$i]['branch_code']);
                 $data[$i]['branch_id'] = $branch_id;
                 $data[$i]['department_id'] = $department_id;
-                $data[$i]['password'] = Hash::make($data[$i]['nic']);
-                $this->userRepository->addUserBulk($data[$i]);
+                $data[$i]['password'] = $data[$i]['nic'];
+                $user = $this->userRepository->userSignUp($data[$i]);
+                if (!$user['success']) {
+                    return $user;
+                }
             }
+
+            return [
+                'success' => true,
+                'message' => 'Users added successfully',
+                'data' => null
+            ];
         } catch (\Exception $e) {
             return [
                 'success' => false,
