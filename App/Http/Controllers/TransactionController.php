@@ -2,13 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Interfaces\TransactionServiceInterface;
 use Exception;
 use Illuminate\Http\Request;
 use Log;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use Validator;
 
 class TransactionController extends Controller
 {
+    private $transactionService;
+
+    public function __construct(TransactionServiceInterface $transactionService)
+    {
+        $this->transactionService = $transactionService;
+    }
     protected function logError($url, $error_message)
     {
         Log::error('Error in setting controller function', [
@@ -21,8 +29,9 @@ class TransactionController extends Controller
         $validator = Validator::make($request->all(), [
             'account_id' => 'required|exists:saving_accounts,id',
             'amount' => 'required|numeric',
-            'type' => 'required|in:credit,debit',
+            'type' => 'required|in:deposite,withdraw,interest',
             'description' => 'nullable|string',
+            'title' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -30,8 +39,11 @@ class TransactionController extends Controller
         }
 
         try {
-            $transactionService = app()->make(\App\Services\Interfaces\TransactionServiceInterface::class);
-            $transaction = $transactionService->createTransaction($request->all());
+
+            $data = $request->all();
+            $data['recorded_by'] = JWTAuth::user()->id;
+
+            $transaction = $this->transactionService->createTransaction($request->all());
 
             return response()->json(['data' => $transaction], 201);
         } catch (Exception $e) {
