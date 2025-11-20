@@ -45,7 +45,7 @@ class TransactionController extends Controller
 
             $transaction = $this->transactionService->createTransaction($data);
 
-            return response()->json(['data' => $transaction], 201);
+            return response()->json($transaction, 201);
         } catch (Exception $e) {
             $url = $request->url();
             $error_message = $e->getMessage();

@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Repositories\Interfaces\MemberRepositoryInterface;
 use App\Services\Interfaces\MemberServiceInterface;
 use App\Services\Interfaces\UserServiceInterface;
+use Exception;
 use Log;
 
 class MemberService implements MemberServiceInterface
@@ -49,5 +50,20 @@ class MemberService implements MemberServiceInterface
         $members = $this->memberRepository->getAllMembers();
 
         return $members;
+    }
+
+    public function getMemberById($id)
+    {
+        return $this->memberRepository->getMemberById($id);
+    }
+
+    public function updateMember(array $data)
+    {
+        try {
+            $respose = $this->memberRepository->updateMember($data);
+            return $respose;
+        } catch (Exception $e) {
+            Log::info($e->getMessage());
+        }
     }
 }
