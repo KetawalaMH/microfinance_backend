@@ -183,8 +183,9 @@ class UserRepository implements UserRepositoryInterface
                     $output['message'] = 'Fabric registration failed: ' . $fabricResponse->body();
                     $output['data'] = null;
                     Log::error('Fabric registration failed: ' . $fabricResponse->body());
-                }
+                }   // $output['data']['token'] = $token;
             }
+
         } catch (\Exception $e) {
             $url = isset($data['url']) ? $data['url'] : null;
             $error_message = $e->getMessage();
@@ -193,7 +194,7 @@ class UserRepository implements UserRepositoryInterface
             $output['message'] = "Something went wrong, please try again: " . $e->getMessage();
             $output['data'] = null;
             $output['data'] = null;
-            Log::error('Fabric registration failed: ' . $fabricResponse->body());
+            // Log::error('Fabric registration failed: ' . $fabricResponse->body());
         }
         return $output;
     }
@@ -232,43 +233,43 @@ class UserRepository implements UserRepositoryInterface
                     $user->save();
                     $credentials['password'] = $password; // Use social password for social login
 
-                    $fabricResponse = Http::post('http://localhost:4000/ca/login', [
-                        'org' => $user->org,
-                        'userId' => $user->full_name,
-                        'aeskey' => $user->aes_key
-                    ]);
+                    // $fabricResponse = Http::post('http://localhost:4000/ca/login', [
+                    //     'org' => $user->org,
+                    //     'userId' => $user->full_name,
+                    //     'aeskey' => $user->aes_key
+                    // ]);
 
-                    if ($fabricResponse->failed()) {
-                        $output['success'] = false;
-                        $output['message'] = 'Fabric registration failed: ' . $fabricResponse->body();
-                        $output['data'] = null;
-                        Log::error('Fabric registration failed: ' . $fabricResponse->body());
-                    }
+                    // if ($fabricResponse->failed()) {
+                    //     $output['success'] = false;
+                    //     $output['message'] = 'Fabric registration failed: ' . $fabricResponse->body();
+                    //     $output['data'] = null;
+                    //     Log::error('Fabric registration failed: ' . $fabricResponse->body());
+                    // }
 
-                    Log::info($fabricResponse);
+                    // Log::info($fabricResponse);
 
                     if (!$token = JWTAuth::attempt($credentials)) {
                         $output['success'] = false;
                         $output['message'] = "Invalid credentials-Email. Please check & try again.";
                         $output['data'] = null;
-                    } else {
-                        if ($fabricResponse->status() == 200) {
+                    } //else {
+                    // if ($fabricResponse->status() == 200) {
 
-                            $responseData = $fabricResponse->json();
-                            $fabricToken = $responseData['message']['token'] ?? null;
+                    //     $responseData = $fabricResponse->json();
+                    //     $fabricToken = $responseData['message']['token'] ?? null;
 
-                            $output['success'] = true;
-                            $output['message'] = "User sign in success.";
-                            $output['data']['user_id'] = isset($user->id) ? intval($user->id) : 0;
-                            $output['data']['full_name'] = isset($user->full_name) ? $user->full_name : null;
-                            $output['data']['email_address'] = isset($user->email_address) ? $user->email_address : null;
-                            $output['data']['token'] = $fabricToken;
-                        } else {
-                            $output['success'] = false;
-                            $output['message'] = "Authentication block from blockchain";
-                            $output['data'] = null;
-                        }
-                    }
+                    //     $output['success'] = true;
+                    //     $output['message'] = "User sign in success.";
+                    //     $output['data']['user_id'] = isset($user->id) ? intval($user->id) : 0;
+                    //     $output['data']['full_name'] = isset($user->full_name) ? $user->full_name : null;
+                    //     $output['data']['email_address'] = isset($user->email_address) ? $user->email_address : null;
+                    //     $output['data']['token'] = $fabricToken;
+                    // } else {
+                    //     $output['success'] = false;
+                    //     $output['message'] = "Authentication block from blockchain";
+                    //     $output['data'] = null;
+                    // }
+                    //}
                 }
             }
 
