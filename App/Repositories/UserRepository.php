@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Otp;
+use App\Models\PasswordChangeLog;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Repositories\Interfaces\UserRepositoryInterface;
@@ -752,9 +753,25 @@ class UserRepository implements UserRepositoryInterface
                 ];
             }
 
+            // check new password
+            if (Hash::check(value: $newPassword, hashedValue: $user->password)) {
+                return [
+                    'success' => false,
+                    'message' => 'New password cannot be the same as the current password',
+                    'data' => null
+                ];
+            }
+
+
             // update with new password
             $user->password = Hash::make(value: $newPassword);
             $user->save();
+
+            // save password change log
+            $passwordChangeLog = new PasswordChangeLog();
+            $passwordChangeLog->user_id = $user->id;
+            $passwordChangeLog->old_password = Hash::make(value: $currentPassword);
+            $passwordChangeLog->save();
 
             return [
                 'success' => true,
