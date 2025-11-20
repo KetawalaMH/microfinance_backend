@@ -2,8 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Services\UserService;
 use Illuminate\Database\Seeder;
 
 class AdminUserSeeder extends Seeder
@@ -13,6 +12,8 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
+        $userService = app(UserService::class);
+
         $adminUser = [
             'full_name' => 'Admin',
             'email_address' => 'ZK4QH@example.com',
@@ -26,10 +27,6 @@ class AdminUserSeeder extends Seeder
             'department_id' => 1
         ];
 
-        User::updateOrCreate(
-            ['nic' => $adminUser['nic']],   // Search condition
-            $adminUser                     // Values to update
-        );
-
+        $userService->userSignUp($adminUser);
     }
 }

@@ -884,11 +884,11 @@ class UserController extends Controller
                 // Validation rules for each user
                 $rowValidator = Validator::make($userData, [
                     'full_name' => 'required|string|max:255',
-                    'email_address' => 'required|email|unique:users,email',
+                    'email_address' => 'required|email|unique:users,email_address',
                     'mobile_number' => 'nullable|string',
-                    'nic' => 'nullable|string|unique:users,nic',
+                    'nic' => 'required|string|unique:users,nic',
                     'department' => 'required|string|exists:departments,department',
-                    'branch' => 'required|string|exists:branches,branch',
+                    'branch_code' => 'required|string|exists:branches,branch_code',
                 ]);
 
                 if ($rowValidator->fails()) {
@@ -912,7 +912,15 @@ class UserController extends Controller
             }
 
             // Send validated data to service layer
-            $this->userService->addUserBulk($validatedUsers);
+            $response = $this->userService->addUserBulk($validatedUsers);
+
+            if (!$response['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $response['message'],
+                    'data' => null
+                ]);
+            }
 
             return response()->json([
                 'success' => true,

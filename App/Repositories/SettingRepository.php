@@ -91,8 +91,8 @@ class SettingRepository implements SettingRepositoryInterface
     {
         return Department::where('department', $name)->first()->id;
     }
-    public function getBranchId($name)
+    public function getBranchId($branch_code)
     {
-        return Branch::where('branch', $name)->first()->id;
+        return Branch::where('branch_code', $branch_code)->first()->id;
     }
 }

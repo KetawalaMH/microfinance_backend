@@ -27,8 +27,8 @@ class SettingService implements SettingServiceInterface
     {
         return $this->settingRepository->getDepartmntId($name);
     }
-    public function getBranchId($name)
+    public function getBranchId($branch_code)
     {
-        return $this->settingRepository->getBranchId($name);
+        return $this->settingRepository->getBranchId($branch_code);
     }
 }

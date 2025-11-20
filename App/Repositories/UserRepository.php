@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Otp;
+use App\Models\PasswordChangeLog;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Repositories\Interfaces\UserRepositoryInterface;
@@ -118,6 +119,22 @@ class UserRepository implements UserRepositoryInterface
                 }
 
                 $aes_key = $this->generateAESKey($email_address);
+                // $new_user = User::create([
+                //     'user_type_id' => $user_type_id,
+                //     'full_name' => $full_name,
+                //     'email_address' => $email_address,
+                //     'mobile_number' => $mobile,
+                //     'password' => Hash::make($password),
+                //     'is_active' => $is_active,
+                //     'created_at' => $date_time,
+                //     'updated_at' => $date_time,
+                //     'aes_key' => $aes_key,
+                //     'org' => $role->org,
+                //     'branch_id' => $branch_id,
+                //     'department_id' => $department_id
+                // ]);
+
+                // $token = JWTAuth::fromUser($new_user);
 
                 $new_user = User::create([
                     'user_type_id' => $user_type_id,
@@ -755,9 +772,25 @@ class UserRepository implements UserRepositoryInterface
                 ];
             }
 
+            // check new password
+            if (Hash::check(value: $newPassword, hashedValue: $user->password)) {
+                return [
+                    'success' => false,
+                    'message' => 'New password cannot be the same as the current password',
+                    'data' => null
+                ];
+            }
+
+
             // update with new password
             $user->password = Hash::make(value: $newPassword);
             $user->save();
+
+            // save password change log
+            $passwordChangeLog = new PasswordChangeLog();
+            $passwordChangeLog->user_id = $user->id;
+            $passwordChangeLog->old_password = Hash::make(value: $currentPassword);
+            $passwordChangeLog->save();
 
             return [
                 'success' => true,
