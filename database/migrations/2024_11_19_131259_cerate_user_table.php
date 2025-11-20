@@ -23,12 +23,13 @@ return new class extends Migration {
             $table->unsignedBigInteger('user_type_id');
             $table->foreign('user_type_id')->references('id')->on('user_types');
             $table->string('org');
-            $table->string('nic')->unique();
+            $table->string('nic')->unique()->nullable();
             $table->foreignId('member_id')
                 ->nullable()
                 ->constrained('members');
             $table->foreignId('department_id')->nullable()->references('id')->on('departments');
             $table->foreignId('branch_id')->nullable()->references('id')->on('branches');
+            $table->string('aes_key')->nullable();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

@@ -85,14 +85,16 @@ class UserRepository implements UserRepositoryInterface
     public function userSignUp(array $data)
     {
         try {
-            $full_name = isset($data['full_name']) ? $data['full_name'] : null;
-            $email_address = isset($data['email_address']) ? $data['email_address'] : null;
-            $password = isset($data['password']) ? $data['password'] : null;
+            $full_name = $data['full_name'] ?? null;
+            $email_address = $data['email_address'] ?? null;
+            $password = $data['password'] ?? null;
             $user_type_id = isset($data['user_type_id']) ? intval($data['user_type_id']) : 4;
             $is_active = isset($data['is_active']) ? boolval($data['is_active']) : 1;
-            $mobile = isset($data['mobile_number']) ? $data['mobile_number'] : 00000000;
-            $branch_id = isset($data['branch_id']) ? $data['branch_id'] : null;
-            $department_id = isset($data['department_id']) ? $data['department_id'] : null;
+            $mobile = $data['mobile_number'] ?? "00000000";
+            $branch_id = $data['branch_id'] ?? null;
+            $department_id = $data['department_id'] ?? null;
+
+
 
             $is_email_exist = User::where('email_address', $email_address)
                 ->where('is_active', 1)
@@ -116,8 +118,6 @@ class UserRepository implements UserRepositoryInterface
                     $output['data'] = null;
                 }
 
-                // Generate JWT token
-                // $token = JWTAuth::fromUser($new_user);
                 $aes_key = $this->generateAESKey($email_address);
                 // $new_user = User::create([
                 //     'user_type_id' => $user_type_id,
@@ -135,6 +135,24 @@ class UserRepository implements UserRepositoryInterface
                 // ]);
 
                 // $token = JWTAuth::fromUser($new_user);
+
+                $new_user = User::create([
+                    'user_type_id' => $user_type_id,
+                    'full_name' => $full_name,
+                    'email_address' => $email_address,
+                    'mobile_number' => $mobile,
+                    'password' => Hash::make($password),
+                    'is_active' => $is_active,
+                    'created_at' => $date_time,
+                    'updated_at' => $date_time,
+                    'aes_key' => $aes_key,
+                    'org' => $role->org,
+                    'branch_id' => $branch_id,
+                    'department_id' => $department_id
+                ]);
+                // Generate JWT token
+                $token = JWTAuth::fromUser($new_user);
+
 
                 $fabricResponse = Http::post("http://localhost:4000/ca/registerUser", [
                     'org' => $role->org,
@@ -175,8 +193,15 @@ class UserRepository implements UserRepositoryInterface
                     $output['data']['user_id'] = isset($new_user->id) ? intval($new_user->id) : 0;
                     $output['data']['full_name'] = isset($new_user->full_name) ? $new_user->full_name : null;
                     $output['data']['email_address'] = isset($new_user->email_address) ? $new_user->email_address : null;
-                    // $output['data']['token'] = $token;
+                    $output['data']['token'] = $token;
 
+                } else {
+                    $output['success'] = false;
+                    $output['message'] = 'Fabric registration failed: ' . $fabricResponse->body();
+                    $output['data']['user_id'] = isset($new_user->id) ? intval($new_user->id) : 0;
+                    $output['data']['full_name'] = isset($new_user->full_name) ? $new_user->full_name : null;
+                    $output['data']['email_address'] = isset($new_user->email_address) ? $new_user->email_address : null;
+                    $output['data']['token'] = $token;
                 }
             }
         } catch (\Exception $e) {
@@ -186,9 +211,12 @@ class UserRepository implements UserRepositoryInterface
             $output['success'] = false;
             $output['message'] = "Something went wrong, please try again: " . $e->getMessage();
             $output['data'] = null;
+            $output['data'] = null;
+            Log::error('Fabric registration failed: ' . $fabricResponse->body());
         }
         return $output;
     }
+
 
     public function userSignIn(array $data)
     {
@@ -789,7 +817,7 @@ class UserRepository implements UserRepositoryInterface
         }
     }
 
-    public function approvalVerification(array $data): array
+    public function approvalVerification(array $data)
     {
         try {
             $email_address = $data['email_address'] ?? null;
