@@ -31,7 +31,6 @@ class MemberController extends Controller
             'is_active' => 'boolean'
         ]);
         if ($validator->fails()) {
-            Log::info("Hikuna");
             return response()->json([
                 'success' => false,
                 'message' => $validator->errors()->first(),
@@ -57,7 +56,6 @@ class MemberController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
-            Log::info("Hikuna 2");
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create member: ' . $e->getMessage(),

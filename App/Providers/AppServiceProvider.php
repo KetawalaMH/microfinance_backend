@@ -2,13 +2,17 @@
 
 namespace App\Providers;
 
+use App\Repositories\AdminRepository;
+use App\Repositories\Interfaces\AdminRepositoryInterface;
 use App\Repositories\Interfaces\MemberRepositoryInterface;
 use App\Repositories\Interfaces\SavingRepositoryInterface;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Repositories\MemberRepository;
 use App\Repositories\SavingRepository;
 use App\Repositories\TransactionRepository;
+use App\Services\AdminService;
 use App\Services\BankService;
+use App\Services\Interfaces\AdminServiceInterface;
 use App\Services\Interfaces\BankServiceInterface;
 use App\Services\Interfaces\MemberServiceInterface;
 use App\Services\Interfaces\SavingServiceInterface;
@@ -50,6 +54,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(SavingRepositoryInterface::class, SavingRepository::class);
         $this->app->bind(TransactionServiceInterface::class, TransactionService::class);
         $this->app->bind(TransactionRepositoryInterface::class, TransactionRepository::class);
+        $this->app->bind(AdminRepositoryInterface::class, AdminRepository::class);
+        $this->app->bind(AdminServiceInterface::class, AdminService::class);
     }
 
     /**

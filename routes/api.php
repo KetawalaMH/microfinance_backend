@@ -1,6 +1,7 @@
 <?php
 
 //use Illuminate\Http\Request;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\SavingController;
 use App\Http\Controllers\SettingController;
@@ -36,5 +37,5 @@ Route::group(attributes: ['middleware' => ['jwt.auth']], routes: function (): vo
     Route::post(uri: '/auth/transaction/create-transaction', action: [TransactionController::class, 'createTransaction']);
     Route::post(uri: '/auth/transaction/update-transaction', action: [TransactionController::class, 'updateTransaction']);
     Route::get(uri: '/auth/transaction/get-all-transactions', action: [TransactionController::class, 'getTransactions']);
-
+    Route::post(uri: '/auth/admin/approve-member-request', action: [AdminController::class, 'approveMemberRequest']);
 });
