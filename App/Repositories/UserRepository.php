@@ -195,6 +195,13 @@ class UserRepository implements UserRepositoryInterface
                     $output['data']['email_address'] = isset($new_user->email_address) ? $new_user->email_address : null;
                     $output['data']['token'] = $token;
 
+                } else {
+                    $output['success'] = false;
+                    $output['message'] = 'Fabric registration failed: ' . $fabricResponse->body();
+                    $output['data']['user_id'] = isset($new_user->id) ? intval($new_user->id) : 0;
+                    $output['data']['full_name'] = isset($new_user->full_name) ? $new_user->full_name : null;
+                    $output['data']['email_address'] = isset($new_user->email_address) ? $new_user->email_address : null;
+                    $output['data']['token'] = $token;
                 }
             }
         } catch (\Exception $e) {
@@ -204,6 +211,8 @@ class UserRepository implements UserRepositoryInterface
             $output['success'] = false;
             $output['message'] = "Something went wrong, please try again: " . $e->getMessage();
             $output['data'] = null;
+            $output['data'] = null;
+            Log::error('Fabric registration failed: ' . $fabricResponse->body());
         }
         return $output;
     }
