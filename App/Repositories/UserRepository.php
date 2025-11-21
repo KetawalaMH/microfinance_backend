@@ -24,6 +24,12 @@ use Illuminate\Support\Facades\Mail;
 
 class UserRepository implements UserRepositoryInterface
 {
+    protected string $blockchain_url;
+
+    public function __construct()
+    {
+        $this->blockchain_url = config('services.blockchain.url');
+    }
     protected function logError($url, $error_message)
     {
         Log::error('Error in user repository function', [
@@ -136,31 +142,16 @@ class UserRepository implements UserRepositoryInterface
 
                 // $token = JWTAuth::fromUser($new_user);
 
-                $new_user = User::create([
-                    'user_type_id' => $user_type_id,
-                    'full_name' => $full_name,
-                    'email_address' => $email_address,
-                    'mobile_number' => $mobile,
-                    'password' => Hash::make($password),
-                    'is_active' => $is_active,
-                    'created_at' => $date_time,
-                    'updated_at' => $date_time,
-                    'aes_key' => $aes_key,
-                    'org' => $role->org,
-                    'branch_id' => $branch_id,
-                    'department_id' => $department_id
-                ]);
-                // Generate JWT token
-                $token = JWTAuth::fromUser($new_user);
 
-
-                $fabricResponse = Http::post("http://localhost:4000/ca/registerUser", [
-                    'org' => $role->org,
-                    'userId' => $full_name,
-                    'role' => $role->user_type,
-                    'affiliation' => 'org2.department1',
-                    'aesKey' => $aes_key
-                ]);
+                $fabricResponse = Http::withOptions([
+                    'verify' => false
+                ])->post("$this->blockchain_url/ca/registerUser", [
+                            'org' => $role->org,
+                            'userId' => $full_name,
+                            'role' => $role->user_type,
+                            'affiliation' => 'org2.department1',
+                            'aesKey' => $aes_key
+                        ]);
 
                 if ($fabricResponse->failed()) {
                     $output['success'] = false;
@@ -193,17 +184,16 @@ class UserRepository implements UserRepositoryInterface
                     $output['data']['user_id'] = isset($new_user->id) ? intval($new_user->id) : 0;
                     $output['data']['full_name'] = isset($new_user->full_name) ? $new_user->full_name : null;
                     $output['data']['email_address'] = isset($new_user->email_address) ? $new_user->email_address : null;
-                    $output['data']['token'] = $token;
+                    // $output['data']['token'] = $token;
 
                 } else {
                     $output['success'] = false;
                     $output['message'] = 'Fabric registration failed: ' . $fabricResponse->body();
-                    $output['data']['user_id'] = isset($new_user->id) ? intval($new_user->id) : 0;
-                    $output['data']['full_name'] = isset($new_user->full_name) ? $new_user->full_name : null;
-                    $output['data']['email_address'] = isset($new_user->email_address) ? $new_user->email_address : null;
-                    $output['data']['token'] = $token;
-                }
+                    $output['data'] = null;
+                    Log::error('Fabric registration failed: ' . $fabricResponse->body());
+                }   // $output['data']['token'] = $token;
             }
+
         } catch (\Exception $e) {
             $url = isset($data['url']) ? $data['url'] : null;
             $error_message = $e->getMessage();
@@ -212,7 +202,7 @@ class UserRepository implements UserRepositoryInterface
             $output['message'] = "Something went wrong, please try again: " . $e->getMessage();
             $output['data'] = null;
             $output['data'] = null;
-            Log::error('Fabric registration failed: ' . $fabricResponse->body());
+            // Log::error('Fabric registration failed: ' . $fabricResponse->body());
         }
         return $output;
     }
@@ -251,11 +241,14 @@ class UserRepository implements UserRepositoryInterface
                     $user->save();
                     $credentials['password'] = $password; // Use social password for social login
 
-                    $fabricResponse = Http::post('http://localhost:4000/ca/login', [
-                        'org' => $user->org,
-                        'userId' => $user->full_name,
-                        'aeskey' => $user->aes_key
-                    ]);
+                    $fabricResponse = Http::withOptions([
+                        'verify' => false
+                    ])->post("$this->blockchain_url/ca/login", [
+
+                                'org' => $user->org,
+                                'userId' => $user->full_name,
+                                'aeskey' => $user->aes_key
+                            ]);
 
                     if ($fabricResponse->failed()) {
                         $output['success'] = false;

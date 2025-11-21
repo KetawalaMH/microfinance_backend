@@ -11,4 +11,6 @@ interface SavingServiceInterface
 
     public function getSavingAccounts(array $data);
 
+    public function getSavingAccountById($id);
+
 }

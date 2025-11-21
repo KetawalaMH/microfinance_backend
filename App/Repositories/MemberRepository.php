@@ -88,4 +88,50 @@ class MemberRepository implements MemberRepositoryInterface
         }
     }
 
+    public function getMemberById($id)
+    {
+        try {
+            $member = Member::find($id);
+
+            if (!$member) {
+                return [
+                    'success' => false,
+                    'message' => 'Member not found.',
+                    'data' => null,
+                ];
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Member fetched successfully.',
+                'data' => $member,
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    public function updateMember(array $data)
+    {
+        try {
+            $member = Member::find($data['id']);
+            $member->update($data);
+            return [
+                'success' => true,
+                'message' => 'Member updated successfully.',
+                'data' => $member,
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null,
+            ];
+        }
+    }
+
 }

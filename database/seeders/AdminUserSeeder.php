@@ -23,7 +23,7 @@ class AdminUserSeeder extends Seeder
             'user_type_id' => 1,
             'is_active' => true,
             'org' => 'org1',
-            'nic' => '123456789V',
+            'nic' => '123456788V',
             'branch_id' => 1,
             'department_id' => 1
         ];

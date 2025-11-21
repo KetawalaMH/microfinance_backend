@@ -5,22 +5,45 @@ namespace App\Services;
 use App\Models\SavingAccount;
 use App\Repositories\Interfaces\SavingAccountRepositoryInterface;
 use App\Repositories\Interfaces\SavingRepositoryInterface;
+use App\Services\Interfaces\MemberServiceInterface;
 use App\Services\Interfaces\SavingServiceInterface;
 use Log;
 
 class SavingService implements SavingServiceInterface
 {
-    private $repository;
+    protected $repository;
 
-    public function __construct(SavingRepositoryInterface $repository)
+    protected $memberService;
+
+
+    public function __construct(SavingRepositoryInterface $repository, MemberServiceInterface $memberService)
     {
         $this->repository = $repository;
+        $this->memberService = $memberService;
     }
 
     public function createSavingAccount(array $data)
     {
-
-        return $this->repository->createSavingAccount($data);
+        try {
+            $member = $this->memberService->getMemberById($data['member_id']);
+            if (!$member['success']) {
+                return $member;
+            }
+            if ($member['data']->status != 'active') {
+                return [
+                    'success' => false,
+                    'message' => 'Member is not active',
+                    'data' => null
+                ];
+            }
+            return $this->repository->createSavingAccount($data);
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
     }
 
     public function updateSavingAccount(array $data)
@@ -67,5 +90,10 @@ class SavingService implements SavingServiceInterface
                 'data' => null
             ];
         }
+    }
+
+    public function getSavingAccountById($id)
+    {
+        return $this->repository->getSavingAccountById($id);
     }
 }
