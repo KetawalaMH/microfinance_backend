@@ -54,7 +54,6 @@ class MemberController extends Controller
                 'message' => 'Member created successfully',
                 'data' => $member['data']
             ], 201);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -62,7 +61,6 @@ class MemberController extends Controller
                 'data' => null
             ], 500);
         }
-
     }
     public function getALlMembers(Request $request): JsonResponse
     {
@@ -81,15 +79,12 @@ class MemberController extends Controller
                 'message' => 'Members fetched successfully',
                 'data' => $members['data']
             ], 201);
-
-        } catch (\Exception $e) {
-            Log::info("Hikuna 2");
+        } catch (\Exception $e) {;
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create member: ' . $e->getMessage(),
                 'data' => null
             ], 500);
         }
-
     }
 }

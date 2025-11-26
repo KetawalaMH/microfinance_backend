@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Services\Interfaces\AdminServiceInterface;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Log;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AdminController extends Controller
@@ -16,7 +16,6 @@ class AdminController extends Controller
     public function __construct(AdminServiceInterface $adminService)
     {
         $this->adminService = $adminService;
-
     }
 
     public function approveMemberRequest(Request $request)
@@ -46,8 +45,32 @@ class AdminController extends Controller
                 'message' => 'Failed to create member: ' . $e->getMessage(),
                 'data' => null
             ], 500);
-
         }
+    }
 
+    public function approveLoanRequest(Request $request)
+    {
+        try {
+            $valodator = Validator::make($request->all(), [
+                'loan_id' => 'required|exists:loans,id',
+            ]);
+            if ($valodator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $valodator->errors()->first(),
+                    'data' => null
+                ], 422);
+            }
+            $data = $request->all();
+            $data['approved_by'] = JWTAuth::user()->id;
+            $result = $this->adminService->approveLoanRequest($data);
+            return response()->json($result);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ], 422);
+        }
     }
 }

@@ -27,6 +27,8 @@ class DatabaseSeeder extends Seeder
             BranchSeeder::class,
             DepartmentSeeder::class,
             AdminUserSeeder::class,
+            LoanTypeSeeder::class,
+            LoanTypeNoteSeeder::class,
         ]);
     }
 }

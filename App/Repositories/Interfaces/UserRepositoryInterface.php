@@ -30,4 +30,8 @@ interface UserRepositoryInterface
 
     public function addUserBulk(array $data);
 
+    public function getUserByEmail($email);
+
+    public function updatePassword(string $id, string $currentPassword, string $newPassword);
+
 }

@@ -7,7 +7,7 @@ use App\Models\Transaction;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Services\Interfaces\SavingServiceInterface;
 use App\Services\Interfaces\TransactionServiceInterface;
-use Log;
+use Illuminate\Support\Facades\Log;
 
 class TransactionService implements TransactionServiceInterface
 {
@@ -81,7 +81,6 @@ class TransactionService implements TransactionServiceInterface
             }
 
             return $response;
-
         } catch (\Exception $e) {
             $this->logError("transactions", $e->getMessage());
             return response()->json([
@@ -99,5 +98,15 @@ class TransactionService implements TransactionServiceInterface
     public function getTransaction(array $data)
     {
         return $this->transactionRepository->getTransaction($data);
+    }
+
+    public function addInstallments($data)
+    {
+        return $this->transactionRepository->addInstallments($data);
+    }
+
+    public function getpaymentData($loanId)
+    {
+        return $this->transactionRepository->getpaymentData($loanId);
     }
 }

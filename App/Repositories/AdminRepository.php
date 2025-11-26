@@ -6,15 +6,13 @@ use App\Models\ActionLog;
 use App\Models\Admin;
 use App\Repositories\Interfaces\AdminRepositoryInterface;
 use Exception;
-use Log;
+use Illuminate\Support\Facades\Log;
 
 class AdminRepository implements AdminRepositoryInterface
 {
-    public function approveMemberRequest(array $data)
+    public function logAction(array $data)
     {
         try {
-            Log::info('admin repository');
-            Log::info($data);
             $log = ActionLog::create($data);
 
             if (!$log) {

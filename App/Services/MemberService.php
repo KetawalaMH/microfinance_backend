@@ -7,7 +7,7 @@ use App\Repositories\Interfaces\MemberRepositoryInterface;
 use App\Services\Interfaces\MemberServiceInterface;
 use App\Services\Interfaces\UserServiceInterface;
 use Exception;
-use Log;
+use Illuminate\Support\Facades\Log;
 
 class MemberService implements MemberServiceInterface
 {
@@ -42,7 +42,6 @@ class MemberService implements MemberServiceInterface
         }
 
         return $member;
-
     }
 
     public function getAllMembers()

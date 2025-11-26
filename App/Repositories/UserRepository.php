@@ -19,6 +19,7 @@ $caBaseUrl = env('FABRIC_CA_BASE_URL');
 
 
 /*use Illuminate\Support\Facades\Http;*/
+
 use Illuminate\Support\Facades\Log; // Import Log facade at the top
 use Illuminate\Support\Facades\Mail;
 
@@ -66,7 +67,7 @@ class UserRepository implements UserRepositoryInterface
         return $decryptedText;
     }
 
-    function generateRandomString($length/* = 4*/ , $type/* = 1*/)
+    function generateRandomString($length/* = 4*/, $type/* = 1*/)
     {
         if (intval($type) == 1) {
             $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -146,12 +147,12 @@ class UserRepository implements UserRepositoryInterface
                 $fabricResponse = Http::withOptions([
                     'verify' => false
                 ])->post("$this->blockchain_url/ca/registerUser", [
-                            'org' => $role->org,
-                            'userId' => $full_name,
-                            'role' => $role->user_type,
-                            'affiliation' => 'org2.department1',
-                            'aesKey' => $aes_key
-                        ]);
+                    'org' => $role->org,
+                    'userId' => $full_name,
+                    'role' => $role->user_type,
+                    'affiliation' => 'org2.department1',
+                    'aesKey' => $aes_key
+                ]);
 
                 if ($fabricResponse->failed()) {
                     $output['success'] = false;
@@ -193,7 +194,6 @@ class UserRepository implements UserRepositoryInterface
                     Log::error('Fabric registration failed: ' . $fabricResponse->body());
                 }   // $output['data']['token'] = $token;
             }
-
         } catch (\Exception $e) {
             $url = isset($data['url']) ? $data['url'] : null;
             $error_message = $e->getMessage();
@@ -211,134 +211,88 @@ class UserRepository implements UserRepositoryInterface
     public function userSignIn(array $data)
     {
         try {
-            Log::info("message :", $data);
+            // Validate input
+            $email = $data['email_address'] ?? null;
+            $password = $data['password'] ?? null;
 
-            $email_address = $data['email_address'] ?? null;
-            $password = isset($data['password']) ? $this->decryptText($data['password']) : null;
-            $push_id = $data['push_id'] ?? null;
-            $os_type = isset($data['os_type']) ? intval($data['os_type']) : 0;
-
-
-
-            $user = User::where('email_address', $email_address)
-                ->where('is_active', 1)
-                ->orderBy('id', 'desc')->first();
-
-
-
-            if (!isset($user->id)) {
-                $output['success'] = false;
-                $output['message'] = "Account does not exist.";
-                $output['data'] = null;
-            } else {
-                if (true) {
-                    /*$sys_type_id = isset($user->user_type_id) ? intval($user->user_type_id) : 0;
-                    if($user_type_id == $sys_type_id) {*/
-                    $credentials['email_address'] = $email_address;
-                    $date_time = date('Y-m-d H:i:s');
-                    $user->password = $password; // Use social password for social login
-                    $user->updated_at = $date_time;
-                    $user->save();
-                    $credentials['password'] = $password; // Use social password for social login
-
-                    $fabricResponse = Http::withOptions([
-                        'verify' => false
-                    ])->post("$this->blockchain_url/ca/login", [
-
-                                'org' => $user->org,
-                                'userId' => $user->full_name,
-                                'aeskey' => $user->aes_key
-                            ]);
-
-                    if ($fabricResponse->failed()) {
-                        $output['success'] = false;
-                        $output['message'] = 'Fabric registration failed: ' . $fabricResponse->body();
-                        $output['data'] = null;
-                        Log::error('Fabric registration failed: ' . $fabricResponse->body());
-                    }
-
-                    Log::info($fabricResponse);
-
-                    if (!$token = JWTAuth::attempt($credentials)) {
-                        $output['success'] = false;
-                        $output['message'] = "Invalid credentials-Email. Please check & try again.";
-                        $output['data'] = null;
-                    } else {
-                        if ($fabricResponse->status() == 200) {
-
-                            $responseData = $fabricResponse->json();
-                            $fabricToken = $responseData['message']['token'] ?? null;
-
-                            $output['success'] = true;
-                            $output['message'] = "User sign in success.";
-                            $output['data']['user_id'] = isset($user->id) ? intval($user->id) : 0;
-                            $output['data']['full_name'] = isset($user->full_name) ? $user->full_name : null;
-                            $output['data']['email_address'] = isset($user->email_address) ? $user->email_address : null;
-                            $output['data']['token'] = $fabricToken;
-                        } else {
-                            $output['success'] = false;
-                            $output['message'] = "Authentication block from blockchain";
-                            $output['data'] = null;
-                        }
-                    }
-                }
+            if (!$email || !$password) {
+                return [
+                    'success' => false,
+                    'message' => 'Email and password are required.',
+                    'data' => null
+                ];
             }
 
-            // Find active user
+            // Verify user exists & active
             $user = User::with('userType')
-                ->where('email_address', $email_address)
+                ->where('email_address', $email)
                 ->where('is_active', 1)
                 ->first();
 
             if (!$user) {
                 return [
                     'success' => false,
-                    'message' => "Account does not exist.",
+                    'message' => 'User not found or inactive.',
                     'data' => null
                 ];
             }
 
-            // Credentials for JWT
+            // First authenticate via Laravel JWT
             $credentials = [
-                'email_address' => $email_address,
+                'email_address' => $email,
                 'password' => $password
             ];
 
-            // Authenticate
             if (!$token = JWTAuth::attempt($credentials)) {
                 return [
                     'success' => false,
-                    'message' => "Invalid credentials. Please check & try again.",
+                    'message' => 'Invalid credentials.',
                     'data' => null
                 ];
             }
 
-            // Success output
+            // Now authenticate with Blockchain (Fabric)
+            $fabricResponse = Http::withOptions(['verify' => false])
+                ->post("{$this->blockchain_url}/ca/login", [
+                    'org'    => $user->org,
+                    'userId' => $user->full_name,
+                    'aeskey' => $user->aes_key,
+                ]);
+
+            // Blockchain failed → stop immediately
+            if ($fabricResponse->failed() || $fabricResponse->status() !== 200) {
+                return [
+                    'success' => false,
+                    'message' => 'Blockchain authentication failed: ' . $fabricResponse->body(),
+                    'data' => null
+                ];
+            }
+
+            // Get Fabric token safely
+            $fabricToken = $fabricResponse->json()['message']['token'] ?? null;
+
             return [
                 'success' => true,
-                'message' => "User sign in success.",
+                'message' => 'User sign in success.',
                 'data' => [
-                    'user_id' => $user->id,
-                    'full_name' => $user->full_name,
+                    'user_id'      => $user->id,
                     'email_address' => $user->email_address,
-                    'token' => $token,
-                    'user_type_id' => $user->user_type_id,
-                    'role' => $user->userType->user_type,
-                    'org' => $user->org
+                    'full_name'    => $user->full_name,
+                    'token'        => $token,
+                    'fabric_token' => $fabricToken,
+                    'role'         => $user->userType->user_type ?? null,
+                    'org'          => $user->org
                 ]
             ];
-
         } catch (\Exception $e) {
-
-            $this->logError($data['url'] ?? null, $e->getMessage());
-
             return [
                 'success' => false,
-                'message' => "Something went wrong, please try again: " . $e->getMessage(),
+                'message' => 'Something went wrong: ' . $e->getMessage(),
                 'data' => null
             ];
         }
     }
+
 
 
     public function userValidate($data)
@@ -598,7 +552,6 @@ class UserRepository implements UserRepositoryInterface
                 'data' => null
             ];
         }
-
     }
 
     public function saveInvitation($data)
@@ -679,8 +632,7 @@ class UserRepository implements UserRepositoryInterface
     {
         try {
             $user = User::where('email_address', $data['email_address'])
-                ->where('is_active', 1)->first();
-            ;
+                ->where('is_active', 1)->first();;
 
             if (!$user) {
                 return [
@@ -706,8 +658,7 @@ class UserRepository implements UserRepositoryInterface
     {
         try {
             $user = User::where(column: 'email_address', operator: $email)
-                ->where(column: 'is_active', operator: 1)->first();
-            ;
+                ->where(column: 'is_active', operator: 1)->first();;
 
             if (!$user) {
                 return [
@@ -800,7 +751,7 @@ class UserRepository implements UserRepositoryInterface
                 'data' => $user
             ];
         } catch (\Exception $e) {
-            \Log::error('Password update failed: ' . $e->getMessage());
+            Log::error('Password update failed: ' . $e->getMessage());
 
             return [
                 'success' => false,
@@ -845,21 +796,19 @@ class UserRepository implements UserRepositoryInterface
 
                 $output['success'] = true;
                 $output['message'] = "User verified.";
-
             } else {
                 $output['success'] = false;
                 $output['message'] = "Authentication block from blockchain";
                 $output['data'] = null;
             }
         } catch (\Exception $e) {
-            \Log::error('role verification fail: ' . $e->getMessage());
+            Log::error('role verification fail: ' . $e->getMessage());
 
             return [
                 'success' => false,
                 'message' => 'Something went wrong, please try again',
                 'data' => null
             ];
-
         }
     }
 
@@ -875,5 +824,4 @@ class UserRepository implements UserRepositoryInterface
     {
         return User::insert($data);
     }
-
 }
