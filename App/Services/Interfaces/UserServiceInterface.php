@@ -16,12 +16,18 @@ interface UserServiceInterface
     public function getInvitation(array $data);
     public function updateInvitation($id);
     public function resetPassword(array $data);
-    public function saveOtp(array $data);
-    public function getOtp(string $email, string $otp);
-    public function deleteOtp($id);
-    public function updatePassword(string $id, string $currentPassword, string $newPassword);
 
     public function addUserBulk(array $data);
 
     public function userData($id);
+
+    public function addUser($data);
+
+    public function getUserByEmail($email);
+
+    public function resetPasswordOtpSend($data);
+
+    public function verifyOtp($email, $otp);
+
+    public function updatePassword($id, $currentPassword, $newPassword);
 }

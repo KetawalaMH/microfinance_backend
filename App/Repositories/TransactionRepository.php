@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Models\InstallmentLog;
 use App\Models\Transaction;
 
 class TransactionRepository implements Interfaces\TransactionRepositoryInterface
@@ -39,5 +40,35 @@ class TransactionRepository implements Interfaces\TransactionRepositoryInterface
     public function getTransaction(array $data)
     {
         return Transaction::where($data)->get();
+    }
+
+    public function addInstallments(array $data)
+    {
+        try {
+            $log = InstallmentLog::create($data);
+            if (!$log) {
+                return [
+                    'success' => false,
+                    'message' => 'Failed to record installment log',
+                    'data' => null,
+                ];
+            }
+            return [
+                'success' => true,
+                'message' => 'Installment log recorded successfully',
+                'data' => null,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    public function getpaymentData($loanId)
+    {
+        return InstallmentLog::where('loan_id', $loanId)->get();
     }
 }

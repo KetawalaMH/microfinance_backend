@@ -4,19 +4,23 @@ namespace App\Services;
 
 use App\Models\Admin;
 use App\Repositories\Interfaces\AdminRepositoryInterface;
+use App\Services\Interfaces\LoanServiceInterface;
 use App\Services\Interfaces\MemberServiceInterface;
 use Exception;
-use Log;
+use Illuminate\Support\Facades\Log;
 
 class AdminService implements Interfaces\AdminServiceInterface
 {
     private $adminRepository;
     private $memberService;
 
-    public function __construct(AdminRepositoryInterface $adminRepository, MemberServiceInterface $memberService)
+    private $loanService;
+
+    public function __construct(AdminRepositoryInterface $adminRepository, MemberServiceInterface $memberService, LoanServiceInterface $loanService)
     {
         $this->adminRepository = $adminRepository;
         $this->memberService = $memberService;
+        $this->loanService = $loanService;
     }
 
     protected function logError($url, $error_message)
@@ -34,8 +38,6 @@ class AdminService implements Interfaces\AdminServiceInterface
             if (!$member['success']) {
                 return $member;
             }
-
-            Log::info('Member requt approved');
 
             if ($member['data']['status'] != 'pending') {
                 return [
@@ -58,13 +60,8 @@ class AdminService implements Interfaces\AdminServiceInterface
                 'member_id' => $data['member_id'],
             ];
 
-            Log::info('Member requt approved 56');
-
             //add action log
-            $log = $this->adminRepository->approveMemberRequest($logData);
-
-            Log::info('Member requt approved 700');
-            Log::info($log);
+            $log = $this->adminRepository->logAction($logData);
             if (!$log['success']) {
                 return $log;
             }
@@ -74,17 +71,37 @@ class AdminService implements Interfaces\AdminServiceInterface
                 'message' => 'Member request approved successfully',
                 'data' => null
             ];
-
-
         } catch (Exception $e) {
             $this->logError("transactions", $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => "Something went wrong: " . $e->getMessage()
             ], 500);
-
-
         }
+    }
 
+    public function approveLoanRequest(array $data)
+    {
+        try {
+            $loanUpdate = $this->loanService->approveLoanRequest($data);
+            if (!$loanUpdate['success']) {
+                Log::info($loanUpdate['message']);
+                return $loanUpdate;
+            }
+            $logData = [
+                'done_by' => $data['approved_by'],
+                'title' => 'Loan request approved',
+                'description' => 'Loan request approved by admin',
+                'loan_id' => $data['loan_id'],
+            ];
+            $log = $this->adminRepository->logAction($logData);
+            return $log;
+        } catch (Exception $e) {
+            $this->logError("transactions", $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => "Something went wrong: " . $e->getMessage()
+            ], 500);
+        }
     }
 }

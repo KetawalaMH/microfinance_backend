@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->string('description');
             $table->foreignId('account_id')->nullable()->constrained('saving_accounts');
             $table->foreignId('member_id')->nullable()->constrained('members');
+            $table->foreignId('loan_id')->nullable()->constrained('loans');
             $table->timestamps();
         });
     }

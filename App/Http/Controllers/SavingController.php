@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\Interfaces\SavingServiceInterface;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Validator;
+use Illuminate\Support\Facades\Validator;
 
 class SavingController extends Controller
 {
