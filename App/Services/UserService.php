@@ -34,6 +34,11 @@ class UserService implements UserServiceInterface
         return $this->userRepository->userSignUp($data);
     }
 
+    
+    public function approvalVerification($data) {
+        return $this->userRepository->approvalVerification($data);
+    }
+
     public function userSignIn(array $data)
     {
         return $this->userRepository->userSignIn($data);
@@ -233,6 +238,8 @@ class UserService implements UserServiceInterface
     public function getUserByEmail($email) {
         return $this->userRepository->getUserByEmail($email);
     }
+
+    
 
     public function resetPasswordOtpSend($data) {
         try{

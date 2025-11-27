@@ -761,9 +761,10 @@ class UserRepository implements UserRepositoryInterface
         }
     }
 
-    public function approvalVerification(array $data)
+ public function approvalVerification(array $data)
 {
     try {
+
         $email_address = $data['email_address'] ?? null;
 
         $user = User::where('email_address', $email_address)
@@ -779,33 +780,26 @@ class UserRepository implements UserRepositoryInterface
             'signature' => $data['signature'] ?? null,
             'aesKey' => $user->aes_key,
             'org' => $user->org,
-            'data' =>$data['data']
+            'data' => $data['data'] ?? null
         ]);
 
-                $output['success'] = true;
-                $output['message'] = "User verified.";
-            } else {
-                $output['success'] = false;
-                $output['message'] = "Authentication block from blockchain";
-                $output['data'] = null;
-            }
-        } catch (\Exception $e) {
-            Log::error('role verification fail: ' . $e->getMessage());
+        $fabricBody = $fabricResponse->json();
+        Log::info('fabric', $fabricBody);
 
+        if ($fabricBody['code'] == 200) {
+            return [
+                'success' => true,
+                'message' => 'User verified.',
+                'fabric_message' => $fabricBody['message']
+            ];
+        } else {
             return [
                 'success' => false,
-                'message' => 'Fabric verification failed',
-                'fabric_code' => $fabricBody['code'] ?? null,
-                'fabric_message' => $fabricBody['message'] ?? null,
+                'message' => 'Authentication block from blockchain',
+                'fabric_code' => $fabricBody['code'],
+                'fabric_message' => $fabricBody['message'],
             ];
         }
-
-        // if code is 200
-        return [
-            'success' => true,
-            'message' => 'User verified successfully',
-            'fabric_message' => $fabricBody['message']
-        ];
 
     } catch (\Exception $e) {
 
@@ -814,10 +808,10 @@ class UserRepository implements UserRepositoryInterface
         return [
             'success' => false,
             'message' => 'Something went wrong, please try again',
-            'data' => null
         ];
     }
 }
+
 
 
     private function generateAESKey(string $email): string
