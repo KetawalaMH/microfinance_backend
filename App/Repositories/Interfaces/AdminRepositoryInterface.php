@@ -6,5 +6,5 @@ use App\Models\Admin;
 
 interface AdminRepositoryInterface
 {
-    public function approveMemberRequest(array $data);
+    public function logAction(array $data);
 }

@@ -135,88 +135,6 @@ class UserController extends Controller
         return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
     }
 
-    public function generateOTP(Request $request)
-    {
-        try {
-            $validator = Validator::make($request->all(), [
-                'email_address' => 'required|email'
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation error',
-                    'data' => $validator->errors()
-                ], 400);
-            } else {
-                $result = $this->userService->generateOTP($request->all());
-                if (!$result['success']) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => $result['message'],
-                        'data' => null
-                    ], 400);
-                }
-                return response()->json([
-                    'success' => true,
-                    'message' => $result['message'],
-                    'data' => $result['data']
-                ], 200);
-            }
-        } catch (\Exception $e) {
-            $url = "auth/otp/generate";
-            $this->logError($url, $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => "Something went wrong, please try again: " . $e->getMessage(),
-                'data' => null
-            ], 500);
-        }
-    }
-
-    public function otpVerify(Request $request)
-    {
-        try {
-            $validator = Validator::make($request->all(), [
-                'email_address' => 'required|email',
-                'otp' => 'required|string|min:6',
-                'reference' => 'required|string|min:12|max:255'
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation error',
-                    'data' => $validator->errors()
-                ], 400);
-            } else {
-                $result = $this->userService->otpVerify($request->all());
-                if (!$result['success']) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => $result['message'],
-                        'data' => null
-                    ], 400);
-                }
-                return response()->json([
-                    'success' => true,
-                    'message' => $result['message'],
-                    'data' => $result['data']
-                ], 200);
-            }
-        } catch (\Exception $e) {
-            $url = "auth/otp/verify";
-            $this->logError($url, $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => "Something went wrong, please try again: " . $e->getMessage(),
-                'data' => null
-            ], 500);
-        }
-    }
-
     public function logOut(Request $request)
     {
         try {
@@ -474,46 +392,15 @@ class UserController extends Controller
             $data = json_decode($request->getContent(), true);
             $data['url'] = $request->url();
             $data['is_active'] = 0;
+            $data['sent_by'] = JwtAuth::user()->id;
             //check esxisting invitation
 
-            $out_data = $this->userService->userSignUp($data);
+            $out_data = $this->userService->addUser($data);
             if (!$out_data['success']) {
                 $output['success'] = false;
                 $output['message'] = $out_data['message'];
                 $output['data'] = null;
                 return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
-            }
-
-            $new_user = $out_data['data'];
-            $token = $new_user['token'];
-            $inivitationData = [
-                'user_id' => $new_user['user_id'],
-                'sent_by' => JwtAuth::user()->id,
-                'branch_id' => JwtAuth::user()->branch_id,
-                'token' => $new_user['token'],
-                'email_address' => $data['email_address']
-            ];
-            // save invitation 
-            $invitation = $this->userService->saveInvitation($inivitationData);
-            if (!$invitation['success']) {
-                $this->userService->deleteUser($new_user['user_id']);
-                $output['success'] = false;
-                $output['message'] = $invitation['message'];
-                $output['data'] = null;
-                return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
-            }
-            //send invitation email
-            try {
-                Mail::to($data['email_address'])->send(new InvitationMail($token));
-            } catch (\Exception $e) {
-                // Log the error or handle it as needed
-                Log::error('Failed to send invitation email: ' . $e->getMessage());
-
-                // Optionally return or throw a custom response
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to send the invitation email. Please try again later.'
-                ], 500);
             }
 
             return response()->json([
@@ -549,7 +436,6 @@ class UserController extends Controller
                 ], 400);
             }
             $data = json_decode($request->getContent(), true);
-            Log::info($data);
             //get invitation data
             $invitation = $this->userService->getInvitation($data['token']);
             if (!$invitation['success']) {
@@ -624,7 +510,7 @@ class UserController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
-            $out_data = $this->userService->saveOtp($dto);
+            $out_data = $this->userService->resetPasswordOtpSend($dto);
             if (!$out_data['success']) {
                 return response()->json(data: [
                     'success' => false,
@@ -632,26 +518,6 @@ class UserController extends Controller
                     'data' => null
                 ]);
             }
-
-            //send invitation email
-            try {
-                Mail::to(users: $data['email_address'])->send(mailable: new ResetPasswordOtpMail(otp: $otp));
-            } catch (\Exception $e) {
-                // Log the error or handle it as needed
-                Log::error(message: 'Failed to send otp: ' . $e->getMessage());
-
-                // Optionally return or throw a custom response
-                return response()->json(data: [
-                    'success' => false,
-                    'message' => 'Failed to send the invitation email. Please try again later.'
-                ], status: 500);
-            }
-
-            return response()->json(data: [
-                'success' => true,
-                'message' => 'Otp sent successfully',
-                'data' => null
-            ]);
         } catch (\Exception $e) {
             $url = "auth/users/data";
             $this->logError(url: $url, error_message: $e->getMessage());
@@ -677,7 +543,7 @@ class UserController extends Controller
             $email = $request->email_address;
             $otp = $request->otp;
 
-            $otpRecord = $this->userService->getOtp($email, $otp);
+            $otpRecord = $this->userService->verifyOtp($email, $otp);
 
             if (!$otpRecord) {
                 return response()->json(data: ['success' => false, 'message' => 'Invalid OTP'], status: 400);
@@ -707,9 +573,6 @@ class UserController extends Controller
                     'data' => null
                 ], status: 500);
             }
-
-            // OTP is valid → delete it
-            $this->userService->deleteOtp($otpRecord->id);
             $data = [
                 'token' => $token,
                 'user' => $user
@@ -786,7 +649,7 @@ class UserController extends Controller
             ], status: 200);
 
         } catch (\Exception $e) {
-            \Log::error(message: 'Password setup failed: ' . $e->getMessage());
+            Log::error(message: 'Password setup failed: ' . $e->getMessage());
             return response()->json(data: [
                 'success' => false,
                 'message' => 'Something went wrong, please try again',
@@ -821,7 +684,7 @@ class UserController extends Controller
             ], status: 200);
 
         } catch (\Exception $e) {
-            \Log::error(message: 'Password setup failed: ' . $e->getMessage());
+            Log::error(message: 'Password setup failed: ' . $e->getMessage());
             return response()->json(data: [
                 'success' => false,
                 'message' => 'Something went wrong, please try again',

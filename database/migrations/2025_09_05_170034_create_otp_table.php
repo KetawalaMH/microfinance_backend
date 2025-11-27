@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create(table: 'otps', callback: function (Blueprint $table): void {
             $table->id();
-            $table->string(column: 'email')->index();
+            $table->string(column: 'email_address')->index();
             $table->string(column: 'otp');
             $table->timestamp(column: 'expires_at'); // will be 5 minutes from now
             $table->timestamps();

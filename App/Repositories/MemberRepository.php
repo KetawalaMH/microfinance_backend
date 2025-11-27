@@ -5,7 +5,7 @@ namespace App\Repositories;
 use App\Models\Member;
 use App\Repositories\Interfaces\MemberRepositoryInterface;
 use Exception;
-use Log;
+use Illuminate\Support\Facades\Log;
 
 class MemberRepository implements MemberRepositoryInterface
 {
@@ -24,7 +24,6 @@ class MemberRepository implements MemberRepositoryInterface
             $output['success'] = true;
             $output['message'] = "Member created successfully.";
             $output['data'] = $member;
-
         } catch (Exception $e) {
             $url = "bank/create";
             $error_message = $e->getMessage();
@@ -133,5 +132,4 @@ class MemberRepository implements MemberRepositoryInterface
             ];
         }
     }
-
 }

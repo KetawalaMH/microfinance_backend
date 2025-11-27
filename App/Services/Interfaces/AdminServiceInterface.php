@@ -8,4 +8,5 @@ interface AdminServiceInterface
 {
     public function approveMemberRquest(array $data);
 
+    public function approveLoanRequest(array $data);
 }

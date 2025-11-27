@@ -55,6 +55,6 @@ class InvitationMail extends Mailable
     {
         return $this->subject(subject: 'Your Invitation Token')
             ->view(view: 'emails.invitation')
-            ->with(key: ['token' => $this->token]);
+            ->with(key: ['Otp' => $this->token]);
     }
 }

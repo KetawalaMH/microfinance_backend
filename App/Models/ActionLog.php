@@ -12,6 +12,7 @@ class ActionLog extends Model
         'description',
         'account_id',
         'member_id',
+        'loan_id'
     ];
 
     public function user()
@@ -27,5 +28,10 @@ class ActionLog extends Model
     public function account()
     {
         return $this->belongsTo(SavingAccount::class, 'account_id');
+    }
+
+    public function loan()
+    {
+        return $this->belongsTo(Loan::class, 'loan_id');
     }
 }

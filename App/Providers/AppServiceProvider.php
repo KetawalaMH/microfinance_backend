@@ -5,9 +5,11 @@ namespace App\Providers;
 use App\Repositories\AdminRepository;
 use App\Repositories\Interfaces\AdminRepositoryInterface;
 use App\Repositories\Interfaces\MemberRepositoryInterface;
+use App\Repositories\Interfaces\OtpRepositoryInterface;
 use App\Repositories\Interfaces\SavingRepositoryInterface;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Repositories\MemberRepository;
+use App\Repositories\OtpRepository;
 use App\Repositories\SavingRepository;
 use App\Repositories\TransactionRepository;
 use App\Services\AdminService;
@@ -15,11 +17,13 @@ use App\Services\BankService;
 use App\Services\Interfaces\AdminServiceInterface;
 use App\Services\Interfaces\BankServiceInterface;
 use App\Services\Interfaces\MemberServiceInterface;
+use App\Services\Interfaces\OtpServiceInterface;
 use App\Services\Interfaces\SavingServiceInterface;
 use App\Services\Interfaces\SettingServiceInterface;
 use App\Services\Interfaces\TransactionServiceInterface;
 use App\Services\Interfaces\UserServiceInterface;
 use App\Services\MemberService;
+use App\Services\OtpService;
 use App\Services\SavingService;
 use App\Services\SettingService;
 use App\Services\TransactionService;
@@ -34,6 +38,10 @@ use App\Repositories\SettingRepository;
 
 use App\Repositories\Interfaces\BankRepositoryInterface;
 use App\Repositories\BankRepository;
+use App\Repositories\Interfaces\LoanRepositoryInterface;
+use App\Repositories\LoanRepository;
+use App\Services\Interfaces\LoanServiceInterface;
+use App\Services\LoanService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -56,6 +64,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(TransactionRepositoryInterface::class, TransactionRepository::class);
         $this->app->bind(AdminRepositoryInterface::class, AdminRepository::class);
         $this->app->bind(AdminServiceInterface::class, AdminService::class);
+        $this->app->bind(OtpServiceInterface::class, OtpService::class);
+        $this->app->bind(OtpRepositoryInterface::class, OtpRepository::class);
+        $this->app->bind(LoanRepositoryInterface::class, LoanRepository::class);
+        $this->app->bind(LoanServiceInterface::class, LoanService::class);
     }
 
     /**
