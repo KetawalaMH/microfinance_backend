@@ -16,8 +16,8 @@ class AdminUserSeeder extends Seeder
         $userService = app(UserService::class);
 
         $adminUser = [
-            'full_name' => 'Admin4',
-            'email_address' => 'pgvidushadilshan@gmail.com',
+            'full_name' => 'Admin7',
+            'email_address' => 'pgvidushadilshan1@gmail.com',
             'mobile_number' => '1234567890',
             'password' => 'password@A',
             'user_type_id' => 1,
