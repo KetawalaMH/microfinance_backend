@@ -762,37 +762,25 @@ class UserRepository implements UserRepositoryInterface
     }
 
     public function approvalVerification(array $data)
-    {
-        try {
-            $email_address = $data['email_address'] ?? null;
+{
+    try {
+        $email_address = $data['email_address'] ?? null;
 
-            $user = User::where('email_address', $email_address)
-                ->where('is_active', 1)
-                ->orderBy('id', 'desc')->first();
-            Log::info('user', ['user' => $user]);
+        $user = User::where('email_address', $email_address)
+            ->where('is_active', 1)
+            ->orderBy('id', 'desc')
+            ->first();
 
+        Log::info('user', ['user' => $user]);
 
-            $fabricResponse = Http::post("http://localhost:4000/ca/approve", [
-                'approvalData' => $data['approvalData'],
-                'userId' => $user->full_name,
-                'signature' => $data['signature'],
-                'aesKey' => $user->aes_key,
-                'org' => $user->org
-            ]);
-
-            if ($fabricResponse->failed()) {
-                $output['success'] = false;
-                $output['message'] = 'Fabric verifiaction failed: ' . $fabricResponse->body();
-                $output['data'] = null;
-                Log::error('Fabric verifiaction failed: ' . $fabricResponse->body());
-            }
-
-            Log::info($fabricResponse);
-
-            if ($fabricResponse->status() == 200) {
-
-                $responseData = $fabricResponse->json();
-
+        $fabricResponse = Http::post("$this->blockchain_url/ca/approve", [
+            'approvalData' => $data['approvalData'] ?? null,
+            'userId' => $user->full_name,
+            'signature' => $data['signature'] ?? null,
+            'aesKey' => $user->aes_key,
+            'org' => $user->org,
+            'data' =>$data['data']
+        ]);
 
                 $output['success'] = true;
                 $output['message'] = "User verified.";
@@ -806,11 +794,31 @@ class UserRepository implements UserRepositoryInterface
 
             return [
                 'success' => false,
-                'message' => 'Something went wrong, please try again',
-                'data' => null
+                'message' => 'Fabric verification failed',
+                'fabric_code' => $fabricBody['code'] ?? null,
+                'fabric_message' => $fabricBody['message'] ?? null,
             ];
         }
+
+        // if code is 200
+        return [
+            'success' => true,
+            'message' => 'User verified successfully',
+            'fabric_message' => $fabricBody['message']
+        ];
+
+    } catch (\Exception $e) {
+
+        Log::error('approval verification failed: ' . $e->getMessage());
+
+        return [
+            'success' => false,
+            'message' => 'Something went wrong, please try again',
+            'data' => null
+        ];
     }
+}
+
 
     private function generateAESKey(string $email): string
     {

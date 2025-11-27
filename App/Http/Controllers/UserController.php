@@ -693,24 +693,25 @@ class UserController extends Controller
         }
     }
 
-    // public function approvalVerification(Request $request)
-    // {
-    //     try {
-    //         $data = json_decode($request->getContent(), true);
-    //         $data['url'] = $request->url();
-    //         Log::info($data);
-    //         $out_data = $this->userService->approvalVerification($data);
-    //         $output['success'] = true;
-    //         $output['data'] = $data;
-    //         $output['message'] = "user approved";
-    //     } catch (\Exception $e) {
-    //         $output['success'] = false;
-    //         $output['data'] = null;
-    //         $output['message'] = "Something went wrong, please try again: " . $e->getMessage();
+    public function approvalVerification(Request $request)
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+            $data['url'] = $request->url();
+            Log::info($data);
+            $out_data = $this->userService->approvalVerification($data);
+             Log::info('responseC', $out_data);
+            $output['success'] = $out_data['success'];
+            $output['data'] = $data;
+            $output['message'] = $out_data['message'];
+        } catch (\Exception $e) {
+            $output['success'] = false;
+            $output['data'] = null;
+            $output['message'] = "Something went wrong, please try again: " . $e->getMessage();
 
-    //     }
-    //     return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
-    // }
+        }
+        return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
+    }
 
     public function addUserBulk(Request $request)
     {

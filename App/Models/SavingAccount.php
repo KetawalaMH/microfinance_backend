@@ -26,7 +26,6 @@ class SavingAccount extends Model
         'deposite_slip',
         'application_form',
         'is_active',
-        'status',
     ];
 
     protected $hidden = [
