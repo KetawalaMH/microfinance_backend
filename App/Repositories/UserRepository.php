@@ -822,12 +822,13 @@ class UserRepository implements UserRepositoryInterface
 
         Log::info('user', ['user' => $user]);
 
-        $fabricResponse = Http::post("https://6f64f94eb271.ngrok-free.app/ca/approve", [
+        $fabricResponse = Http::post("$this->blockchain_url/ca/approve", [
             'approvalData' => $data['approvalData'] ?? null,
             'userId' => $user->full_name,
             'signature' => $data['signature'] ?? null,
             'aesKey' => $user->aes_key,
-            'org' => $user->org
+            'org' => $user->org,
+            'data' =>$data['data']
         ]);
 
         $fabricBody = $fabricResponse->json();  // <-- JSON body
