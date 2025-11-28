@@ -31,4 +31,9 @@ class SettingService implements SettingServiceInterface
     {
         return $this->settingRepository->getBranchId($branch_code);
     }
+
+    public function getLoanTypes()
+    {
+        return $this->settingRepository->getLoanTypes();
+    }
 }
