@@ -15,8 +15,11 @@ Route::post(uri: 'auth/register', action: [UserController::class, 'userSignUp'])
 Route::post(uri: 'auth/user/send-reset-password-otp', action: [UserController::class, 'resetPasswordOtpSend']);
 Route::post(uri: 'auth/user/verify-invitation', action: [UserController::class, 'verifyInvitation']);
 Route::post(uri: '/auth/verify-otp', action: [UserController::class, 'verifyOtp']);
+
+//------------settings------------
 Route::get(uri: '/settings/get-member-types', action: [SettingController::class, 'getMemberTypes']);
 Route::get(uri: '/settings/get-account-types', action: [SettingController::class, 'getAccountTypes']);
+Route::get(uri: '/settings/get-loan-types', action: [SettingController::class, 'getLoanTypes']);
 
 Route::post(uri: 'auth/user/verification', action: [UserController::class, 'approvalVerification']);
 

@@ -48,15 +48,29 @@ class SettingController extends Controller
         try {
             $accountTypes = $this->settingService->getAccountTypes();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Account types fetched successfully',
-                'data' => $accountTypes
-            ], 200);
+            return response()->json(
+                $accountTypes,
+                200
+            );
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Something went wrong while fetching account types.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getLoanTypes()
+    {
+        try {
+            $loanTypes = $this->settingService->getLoanTypes();
+
+            return response()->json($loanTypes, 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong while fetching loan types.',
                 'error' => $e->getMessage()
             ], 500);
         }

@@ -12,4 +12,5 @@ interface SettingRepositoryInterface
     public function getDepartmntId($name);
     public function getBranchId($branch_code);
 
+    public function getLoanTypes();
 }
