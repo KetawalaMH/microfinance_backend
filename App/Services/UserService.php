@@ -26,7 +26,6 @@ class UserService implements UserServiceInterface
         $this->userRepository = $userRepository;
         $this->settingService = $settingService;
         $this->otpService = $otpService;
-
     }
 
     public function userSignUp(array $data)
@@ -34,8 +33,9 @@ class UserService implements UserServiceInterface
         return $this->userRepository->userSignUp($data);
     }
 
-    
-    public function approvalVerification($data) {
+
+    public function approvalVerification($data)
+    {
         return $this->userRepository->approvalVerification($data);
     }
 
@@ -77,7 +77,7 @@ class UserService implements UserServiceInterface
     public function getInvitation(array $data)
     {
         $otpData = $this->otpService->verifyOtp(identifier: $data['email_address'], otp: $data['otp']);
-        if(!$otpData) {
+        if (!$otpData) {
             return [
                 'success' => false,
                 'message' => 'Invalid OTP',
@@ -97,7 +97,8 @@ class UserService implements UserServiceInterface
         // return $this->userRepository->resetPassword($data);
     }
 
-    public function updatePassword($id, $currentPassword, $newPassword){
+    public function updatePassword($id, $currentPassword, $newPassword)
+    {
         return $this->userRepository->updatePassword($id, $currentPassword, $newPassword);
     }
 
@@ -176,7 +177,6 @@ class UserService implements UserServiceInterface
                 'message' => $response['message'],
                 'data' => $formatted
             ];
-
         } catch (\Exception $e) {
             return [
                 'success' => false,
@@ -235,14 +235,16 @@ class UserService implements UserServiceInterface
         }
     }
 
-    public function getUserByEmail($email) {
+    public function getUserByEmail($email)
+    {
         return $this->userRepository->getUserByEmail($email);
     }
 
-    
 
-    public function resetPasswordOtpSend($data) {
-        try{
+
+    public function resetPasswordOtpSend($data)
+    {
+        try {
 
             $otp = $this->otpService->generateOTP($data['email_address']);
             //send invitation email
@@ -273,9 +275,8 @@ class UserService implements UserServiceInterface
         }
     }
 
-    public function verifyOtp($email, $otp) {
+    public function verifyOtp($email, $otp)
+    {
         return $this->otpService->verifyOtp($email, $otp);
     }
-
-
 }

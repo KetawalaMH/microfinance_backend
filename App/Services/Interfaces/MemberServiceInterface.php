@@ -11,4 +11,5 @@ interface MemberServiceInterface
 
     public function updateMember(array $data);
 
+    public function getMemberDetails($id);
 }

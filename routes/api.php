@@ -33,6 +33,7 @@ Route::group(attributes: ['middleware' => ['jwt.auth']], routes: function (): vo
     //--------------member--------
     Route::post(uri: '/auth/member/add-new-member', action: [MemberController::class, 'createMember']);
     Route::get(uri: '/auth/member/get-all-members', action: [MemberController::class, 'getAllMembers']);
+    Route::get(uri: '/auth/member/get-member-details', action: [MemberController::class, 'getMemberDetails']);
 
     //-----------saving----------
     Route::post(uri: '/auth/saving/create-saving-account', action: [SavingController::class, 'createSavingAccount']);

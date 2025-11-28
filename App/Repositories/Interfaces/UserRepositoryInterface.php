@@ -34,4 +34,5 @@ interface UserRepositoryInterface
 
     public function updatePassword(string $id, string $currentPassword, string $newPassword);
 
+    public function approvalVerification(array $data);
 }

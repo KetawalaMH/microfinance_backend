@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Services\Interfaces\MemberServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Log;
 
 class MemberController extends Controller
 {
@@ -83,6 +83,45 @@ class MemberController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create member: ' . $e->getMessage(),
+                'data' => null
+            ], 500);
+        }
+    }
+
+    public function getMemberDetails(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'member_id' => 'required|exists:members,id',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'data' => null
+            ], 422);
+        }
+
+        try {
+            $data = $request->all();
+            Log::info($data);
+            $member = $this->memberService->getMemberDetails($data['member_id']);
+
+            if ($member['success'] === false) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to fetch member: ' . $member['message'],
+                    'data' => null
+                ], 500);
+            }
+            return response()->json([
+                'success' => true,
+                'message' => 'Member fetched successfully',
+                'data' => $member['data']
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch member: ' . $e->getMessage(),
                 'data' => null
             ], 500);
         }
