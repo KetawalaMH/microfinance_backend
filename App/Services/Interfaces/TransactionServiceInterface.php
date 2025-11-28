@@ -13,4 +13,6 @@ interface TransactionServiceInterface
     public function addInstallments(array $data);
 
     public function getpaymentData($loanId);
+
+    public function getTransactionHistory($id);
 }

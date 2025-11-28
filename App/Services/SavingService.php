@@ -7,6 +7,8 @@ use App\Repositories\Interfaces\SavingAccountRepositoryInterface;
 use App\Repositories\Interfaces\SavingRepositoryInterface;
 use App\Services\Interfaces\MemberServiceInterface;
 use App\Services\Interfaces\SavingServiceInterface;
+use App\Services\Interfaces\TransactionServiceInterface;
+use Illuminate\Support\Facades\Log as FacadesLog;
 use Log;
 
 class SavingService implements SavingServiceInterface
@@ -95,5 +97,113 @@ class SavingService implements SavingServiceInterface
     public function getSavingAccountById($id)
     {
         return $this->repository->getSavingAccountById($id);
+    }
+
+    public function getSavingAccountDetails($id)
+    {
+        try {
+            $savingAccount = $this->repository->getSavingAccountById($id);
+            if (!$savingAccount['success']) {
+                return $savingAccount;
+            }
+
+            FacadesLog::info($savingAccount);
+            $savingAccount = $savingAccount['data'];
+
+            $accountInfomation = [
+                'account_holder' => $savingAccount->member->full_name,
+                'email_addres' => $savingAccount->member->email_addres,
+                'current_balance' => $savingAccount->current_balance,
+                'interest_rate' => $savingAccount->accountType->interest_rate,
+                'savingAccount_catogery' => $savingAccount->accountType->savingAccount_type,
+                'account_opened' => $savingAccount->created_at,
+                'status' => $savingAccount->status,
+            ];
+
+            $transactionService = app(TransactionServiceInterface::class);
+
+            $transactions = $transactionService->getTransactionHistory($id);
+
+            $transactionHistory = [];
+
+            if ($transactions->isNotEmpty()) {
+                foreach ($transactions as $transaction) {
+                    $transactionHistory[] = [
+                        'amount' => $transaction->amount,
+                        'title' => $transaction->title,
+                        'balance' => $transaction->balance,
+                        'date' => $transaction->created_at,
+                        'type' => $transaction->type,
+                    ];
+                }
+            }
+
+            $accountSummary = $this->prepareAccountSummary($transactionHistory);
+            return [
+                'success' => true,
+                'message' => 'Saving account details fetched successfully',
+                'data' => [
+                    'account_information' => $accountInfomation,
+                    'account_summary' => $accountSummary,
+                    'transaction_history' => $transactionHistory
+                ]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    private function prepareAccountSummary(array $transactionHistory)
+    {
+        // If empty → return zero summary
+        if (empty($transactionHistory)) {
+            return [
+                'total_deposit'   => 0,
+                'total_withdraw'  => 0,
+                'total_interest'  => 0,
+                'this_month'      => 0,
+            ];
+        }
+
+        $totalDeposit  = 0;
+        $totalWithdraw = 0;
+        $totalInterest = 0;
+        $thisMonth     = 0;
+
+        $currentMonth = now()->format('Y-m');
+
+        foreach ($transactionHistory as $txn) {
+
+            // Calculate deposit
+            if (isset($txn['type']) && $txn['type'] === 'deposit') {
+                $totalDeposit += $txn['amount'];
+            }
+
+            // Calculate withdraw
+            if (isset($txn['type']) && $txn['type'] === 'withdraw') {
+                $totalWithdraw += $txn['amount'];
+            }
+
+            // Calculate interest
+            if (isset($txn['type']) && $txn['type'] === 'interest') {
+                $totalInterest += $txn['amount'];
+            }
+
+            // Calculate this month totals
+            if (isset($txn['date']) && \Carbon\Carbon::parse($txn['date'])->format('Y-m') == $currentMonth) {
+                $thisMonth += $txn['amount'];
+            }
+        }
+
+        return [
+            'total_deposit'   => $totalDeposit,
+            'total_withdraw'  => $totalWithdraw,
+            'total_interest'  => $totalInterest,
+            'this_month'      => $thisMonth,
+        ];
     }
 }

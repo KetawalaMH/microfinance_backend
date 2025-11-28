@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Services\Interfaces\SavingServiceInterface;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Validator;
 
@@ -80,7 +82,7 @@ class SavingController extends Controller
                 'message' => 'File uploaded successfully',
                 'data' => ['fileUrl' => $fileUrl]
             ], 201);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -151,5 +153,30 @@ class SavingController extends Controller
             'message' => 'Saving accounts fetched successfully',
             'data' => $result['data']
         ]);
+    }
+
+    public function getSavingAccountDetails(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'account_id' => 'required|exists:saving_accounts,id',
+            ]);
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first(),
+                    'data' => null
+                ], 422);
+            }
+            $data = $request->all();
+            $result = $this->savingService->getSavingAccountDetails($data['account_id']);
+            return response()->json($result);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ], 500);
+        }
     }
 }

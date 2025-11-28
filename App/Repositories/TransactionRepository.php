@@ -71,4 +71,12 @@ class TransactionRepository implements Interfaces\TransactionRepositoryInterface
     {
         return InstallmentLog::where('loan_id', $loanId)->get();
     }
+
+    public function getTransactionHistory($id)
+    {
+        return Transaction::where('account_id', $id)
+            ->select(['id', 'amount', 'title', 'balance', 'type', 'created_at'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
 }
