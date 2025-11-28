@@ -39,7 +39,7 @@ class LoanService implements LoanServiceInterface
                 $memberStatus = $member['status'];
                 return [
                     'success' => false,
-                    'message' => `Member is in $memberStatus status`,
+                    'message' =>'Member is not in active status',
                     'data' => null
                 ];
             }
