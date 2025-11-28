@@ -26,14 +26,13 @@ class AccountType extends Model
         'updated_at',
     ];
 
-    public function createdBy(): BelongsTo
+    public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function updatedBy(): BelongsTo
+    public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
-
 }

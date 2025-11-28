@@ -66,7 +66,6 @@ class SavingRepository implements SavingRepositoryInterface
                 'message' => 'Saving accounts fetched successfully',
                 'data' => $savingAccounts
             ];
-
         } catch (\Exception $e) {
             return [
                 'success' => false,
@@ -79,7 +78,7 @@ class SavingRepository implements SavingRepositoryInterface
     public function getSavingAccountById($id)
     {
         try {
-            $savingAccount = SavingAccount::find($id);
+            $savingAccount = SavingAccount::with(['accountType', 'member'])->find($id);
             if (!$savingAccount) {
                 return [
                     'success' => false,
@@ -100,5 +99,4 @@ class SavingRepository implements SavingRepositoryInterface
             ];
         }
     }
-
 }

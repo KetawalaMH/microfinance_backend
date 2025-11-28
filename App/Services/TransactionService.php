@@ -109,4 +109,9 @@ class TransactionService implements TransactionServiceInterface
     {
         return $this->transactionRepository->getpaymentData($loanId);
     }
+
+    public function getTransactionHistory($id)
+    {
+        return $this->transactionRepository->getTransactionHistory($id);
+    }
 }
