@@ -105,4 +105,61 @@ class MemberService implements MemberServiceInterface
             ];
         }
     }
+
+    public function getMemberStats()
+    {
+        try {
+            // Fetch members
+            $members = $this->memberRepository->getAllActiveMembers();
+
+            if (!$members || $members->count() === 0) {
+                return [
+                    'success' => false,
+                    'message' => 'Active members not found.',
+                    'data' => null
+                ];
+            }
+
+            // Total active members
+            $totalActiveMembers = $members->count();
+
+            // Current & last month
+            $currentMonth = now()->month;
+            $lastMonth = now()->subMonth()->month;
+
+            // Current month new members
+            $currentMonthNew = $members->filter(function ($member) use ($currentMonth) {
+                return Carbon::parse($member->created_at)->month == $currentMonth;
+            })->count();
+
+            // Last month new members
+            $lastMonthNew = $members->filter(function ($member) use ($lastMonth) {
+                return Carbon::parse($member->created_at)->month == $lastMonth;
+            })->count();
+
+            // Growth rate calculation
+            if ($lastMonthNew == 0) {
+                $growthRate = $currentMonthNew > 0 ? 100 : 0;
+            } else {
+                $growthRate = (($currentMonthNew - $lastMonthNew) / $lastMonthNew) * 100;
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Member statistics calculated successfully.',
+                'data' => [
+                    'total_active_members' => $totalActiveMembers,
+                    'current_month_new_members' => $currentMonthNew,
+                    'last_month_new_members' => $lastMonthNew,
+                    'growth_rate' => round($growthRate, 2),
+                ]
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
 }

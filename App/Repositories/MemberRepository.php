@@ -132,4 +132,11 @@ class MemberRepository implements MemberRepositoryInterface
             ];
         }
     }
+
+    public function getAllActiveMembers()
+    {
+        return Member::where('status', 'active')
+            ->select('id', 'full_name', 'status', 'created_at')
+            ->get();
+    }
 }

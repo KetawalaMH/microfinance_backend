@@ -99,4 +99,11 @@ class SavingRepository implements SavingRepositoryInterface
             ];
         }
     }
+
+    public function getTotalSavingData()
+    {
+        return SavingAccount::whereIn('status', ['active', 'closed'])
+            ->select('id', 'member_id', 'current_balance', 'created_at', 'status')
+            ->get();
+    }
 }

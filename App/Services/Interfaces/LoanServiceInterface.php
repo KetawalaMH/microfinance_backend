@@ -19,4 +19,6 @@ interface LoanServiceInterface
     public function getLoanDetails(array $data);
 
     public function approveLoanRequest(array $data);
+
+    public function calculateLoanStats();
 }

@@ -4,6 +4,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SavingController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\TransactionController;
@@ -61,4 +62,12 @@ Route::group(attributes: ['middleware' => ['jwt.auth']], routes: function (): vo
     Route::post(uri: '/auth/loan/add-installments', action: [LoanController::class, 'addInstallments']);
     Route::get(uri: '/auth/loan/get-all-loan-applications', action: [LoanController::class, 'getAllLoanApplications']);
     Route::get(uri: '/auth/loan/get-loan-details', action: [LoanController::class, 'getLoanDetails']);
+
+    //-----dashboard and notifications-----
+    Route::get(uri: '/auth/dashboard/get-dashboard-data', action: [SettingController::class, 'getDashboardData']);
+    Route::get(uri: '/auth/notifications/get-notifications', action: [NotificationController::class, 'getNotifications']);
+    Route::get(uri: '/auth/notifications/get-user-notifications', action: [NotificationController::class, 'index']);
+    Route::post(uri: '/auth/notifications/read-notification', action: [NotificationController::class, 'markAsRead']);
+    Route::post(uri: '/auth/notifications/read-all/', action: [NotificationController::class, 'markAllRead']);
+    Route::delete('/auth/notifications/delete-notification/', [NotificationController::class, 'destroy']);
 });
