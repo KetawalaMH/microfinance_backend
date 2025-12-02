@@ -12,4 +12,5 @@ interface MemberRepositoryInterface
 
     public function updateMember(array $data);
 
+    public function getAllActiveMembers();
 }

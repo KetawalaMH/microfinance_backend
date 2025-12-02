@@ -75,4 +75,19 @@ class SettingController extends Controller
             ], 500);
         }
     }
+
+    public function getDashboardData(Request $request)
+    {
+        try {
+            $dashboardData = $this->settingService->getDashboardData($request->all());
+
+            return response()->json($dashboardData, 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong while fetching dashboard data.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

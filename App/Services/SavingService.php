@@ -8,6 +8,7 @@ use App\Repositories\Interfaces\SavingRepositoryInterface;
 use App\Services\Interfaces\MemberServiceInterface;
 use App\Services\Interfaces\SavingServiceInterface;
 use App\Services\Interfaces\TransactionServiceInterface;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log as FacadesLog;
 use Log;
 
@@ -155,6 +156,61 @@ class SavingService implements SavingServiceInterface
                 'data' => null
             ];
         }
+    }
+
+    public function calculateSavingStats()
+    {
+        $response = $this->repository->getTotalSavingData();
+
+        if (!$response || $response->count() === 0) {
+            return [
+                'success' => true,
+                'message' => 'Saving data not found.',
+                'data' => [
+                    'total_amount' => 0,
+                    'current_month_total' => 0,
+                    'last_month_total' => 0,
+                    'growth_rate' => round(0, 2),
+                ]
+            ];
+        }
+
+        $savings = $response;
+
+        // 1. Total saving amount
+        $totalAmount = $savings->sum('current_balance');
+
+        // 2. Monthly calculations
+        $currentMonth = now()->month;
+        $lastMonth = now()->subMonth()->month;
+
+        $currentMonthTotal = $savings->filter(function ($saving) use ($currentMonth) {
+            return $saving->created_at &&
+                Carbon::parse($saving->created_at)->month == $currentMonth;
+        })->sum('current_balance');
+
+        $lastMonthTotal = $savings->filter(function ($saving) use ($lastMonth) {
+            return $saving->created_at &&
+                Carbon::parse($saving->created_at)->month == $lastMonth;
+        })->sum('current_balance');
+
+        // 3. Growth rate
+        if ($lastMonthTotal == 0) {
+            $growthRate = 100; // or 0
+        } else {
+            $growthRate = (($currentMonthTotal - $lastMonthTotal) / $lastMonthTotal) * 100;
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Saving statistics calculated successfully.',
+            'data' => [
+                'total_amount' => $totalAmount,
+                'current_month_total' => $currentMonthTotal,
+                'last_month_total' => $lastMonthTotal,
+                'growth_rate' => round($growthRate, 2),
+            ]
+        ];
     }
 
     private function prepareAccountSummary(array $transactionHistory)

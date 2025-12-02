@@ -39,7 +39,7 @@ class LoanService implements LoanServiceInterface
                 $memberStatus = $member['status'];
                 return [
                     'success' => false,
-                    'message' =>'Member is not in active status',
+                    'message' => 'Member is not in active status',
                     'data' => null
                 ];
             }
@@ -227,7 +227,7 @@ class LoanService implements LoanServiceInterface
             $loan['next_installment_date'] = $nextDueDate;
             $loan['remaining_installments'] = $loan->remaining_installments - 1;
             $paidInstallments = $loan->total_installments - $loan->remaining_installments;
-            $loan->remaining_amount -= $loan->installment_amount;
+            $loan->remaining_amount = $this->remainingLoanBalance($loan->amount, $loan->loanType->max_interest_rate, $loan->total_installments, $paidInstallments);
             $loan->paid_amount += $loan->installment_amount;
             $loan->save();
 
@@ -396,6 +396,56 @@ class LoanService implements LoanServiceInterface
         }
     }
 
+    public function calculateLoanStats()
+    {
+        $loanResponse = $this->loanRepository->getTotalLoanData();
+
+        if (!$loanResponse['success']) {
+            return $loanResponse;
+        }
+
+        $loans = $loanResponse['data'];
+
+        // Total loan amount
+        $totalAmount = $loans->sum('amount');
+
+        // Current month
+        $currentMonth = now()->month;
+        $lastMonth = now()->subMonth()->month;
+
+        // Totals by month (using the loaded collection)
+        $currentMonthTotal = $loans->where('approved_date', '!=', null)
+            ->filter(function ($loan) use ($currentMonth) {
+                return Carbon::parse($loan->approved_date)->month == $currentMonth;
+            })
+            ->sum('amount');
+
+        $lastMonthTotal = $loans->where('approved_date', '!=', null)
+            ->filter(function ($loan) use ($lastMonth) {
+                return Carbon::parse($loan->approved_date)->month == $lastMonth;
+            })
+            ->sum('amount');
+
+        // Growth rate calculation
+        if ($lastMonthTotal == 0) {
+            $growthRate = 100; // or 0 depending on your preference
+        } else {
+            $growthRate = (($currentMonthTotal - $lastMonthTotal) / $lastMonthTotal) * 100;
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Loan statistics calculated successfully.',
+            'data' => [
+                'total_amount' => $totalAmount,
+                'current_month_total' => $currentMonthTotal,
+                'last_month_total' => $lastMonthTotal,
+                'growth_rate' => round($growthRate, 2),
+            ]
+        ];
+    }
+
+
     private function calculateInstallment($loanAmount, $annualInterestRate, $months)
     {
         $monthlyRate = $annualInterestRate / 12 / 100;
@@ -409,6 +459,7 @@ class LoanService implements LoanServiceInterface
 
         return round($emi, 2);
     }
+
 
     private function remainingLoanBalance($loanAmount, $annualInterestRate, $totalInstallments, $paidInstallments)
     {

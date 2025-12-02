@@ -229,4 +229,33 @@ class LoanRepository implements LoanRepositoryInterface
             ];
         }
     }
+
+    public function getTotalLoanData()
+    {
+        try {
+            $loans = Loan::whereIn('status', ['approved', 'due', 'paid'])
+                ->select('id', 'borrower_id', 'amount', 'approved_date', 'status')
+                ->get();
+
+            if (!$loans) {
+                return [
+                    'success' => false,
+                    'message' => 'Loan data not found.',
+                    'data' => null
+                ];
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Loan data fetched successfully.',
+                'data' => $loans
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
 }

@@ -11,4 +11,6 @@ interface SettingServiceInterface
     public function getBranchId($branch_code);
 
     public function getLoanTypes();
+
+    public function getDashboardData(array $data);
 }

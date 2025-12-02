@@ -19,4 +19,6 @@ interface LoanRepositoryInterface
     public function getLoanById($id);
 
     public function getAllLoanApplications(array $data);
+
+    public function getTotalLoanData();
 }
