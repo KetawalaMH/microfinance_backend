@@ -101,22 +101,21 @@ class UserRepository implements UserRepositoryInterface
             $branch_id = $data['branch_id'] ?? null;
             $department_id = $data['department_id'] ?? null;
 
-
-
             $is_email_exist = User::where('email_address', $email_address)
                 ->where('is_active', 1)
                 ->orderBy('id', 'desc')->first();
+            Log::info('userSignUp', $data);
             Log::info($is_email_exist);
             if ($is_email_exist) {
+
                 $output['success'] = false;
                 $output['message'] = "The email address you've entered is already associated with an existing account!";
                 $output['data'] = null;
             } else {
+
                 $date_time = date('Y-m-d H:i:s');
-
-
-
                 $role = UserType::where('id', $user_type_id)->first();
+                Log::info($user_type_id);
                 Log::info($role);
 
                 if ($role->is_active == 0) {
@@ -124,6 +123,7 @@ class UserRepository implements UserRepositoryInterface
                     $output['message'] = "This account type creation is blocked!";
                     $output['data'] = null;
                 }
+                Log::info('userSignUp25');
 
                 $aes_key = $this->generateAESKey($email_address);
                 // $new_user = User::create([
@@ -252,24 +252,24 @@ class UserRepository implements UserRepositoryInterface
             }
 
             // Now authenticate with Blockchain (Fabric)
-            $fabricResponse = Http::withOptions(['verify' => false])
-                ->post("{$this->blockchain_url}/ca/login", [
-                    'org'    => $user->org,
-                    'userId' => $user->full_name,
-                    'aeskey' => $user->aes_key,
-                ]);
+            // $fabricResponse = Http::withOptions(['verify' => false])
+            //     ->post("{$this->blockchain_url}/ca/login", [
+            //         'org'    => $user->org,
+            //         'userId' => $user->full_name,
+            //         'aeskey' => $user->aes_key,
+            //     ]);
 
-            // Blockchain failed → stop immediately
-            if ($fabricResponse->failed() || $fabricResponse->status() !== 200) {
-                return [
-                    'success' => false,
-                    'message' => 'Blockchain authentication failed: ' . $fabricResponse->body(),
-                    'data' => null
-                ];
-            }
+            // // Blockchain failed → stop immediately
+            // if ($fabricResponse->failed() || $fabricResponse->status() !== 200) {
+            //     return [
+            //         'success' => false,
+            //         'message' => 'Blockchain authentication failed: ' . $fabricResponse->body(),
+            //         'data' => null
+            //     ];
+            // }
 
-            // Get Fabric token safely
-            $fabricToken = $fabricResponse->json()['message']['token'] ?? null;
+            // // Get Fabric token safely
+            // $fabricToken = $fabricResponse->json()['message']['token'] ?? null;
 
             return [
                 'success' => true,
@@ -279,7 +279,7 @@ class UserRepository implements UserRepositoryInterface
                     'email_address' => $user->email_address,
                     'full_name'    => $user->full_name,
                     'token'        => $token,
-                    'fabric_token' => $fabricToken,
+                    // 'fabric_token' => $fabricToken,
                     'role'         => $user->userType->user_type ?? null,
                     'org'          => $user->org
                 ]
@@ -761,56 +761,55 @@ class UserRepository implements UserRepositoryInterface
         }
     }
 
- public function approvalVerification(array $data)
-{
-    try {
+    public function approvalVerification(array $data)
+    {
+        try {
 
-        $email_address = $data['email_address'] ?? null;
+            $email_address = $data['email_address'] ?? null;
 
-        $user = User::where('email_address', $email_address)
-            ->where('is_active', 1)
-            ->orderBy('id', 'desc')
-            ->first();
+            $user = User::where('email_address', $email_address)
+                ->where('is_active', 1)
+                ->orderBy('id', 'desc')
+                ->first();
 
-        Log::info('user', ['user' => $user]);
+            Log::info('user', ['user' => $user]);
 
-        $fabricResponse = Http::post("$this->blockchain_url/ca/approve", [
-            'approvalData' => $data['approvalData'] ?? null,
-            'userId' => $user->full_name,
-            'signature' => $data['signature'] ?? null,
-            'aesKey' => $user->aes_key,
-            'org' => $user->org,
-            'data' => $data['data'] ?? null
-        ]);
+            $fabricResponse = Http::post("$this->blockchain_url/ca/approve", [
+                'approvalData' => $data['approvalData'] ?? null,
+                'userId' => $user->full_name,
+                'signature' => $data['signature'] ?? null,
+                'aesKey' => $user->aes_key,
+                'org' => $user->org,
+                'data' => $data['data'] ?? null
+            ]);
 
-        $fabricBody = $fabricResponse->json();
-        Log::info('fabric', $fabricBody);
+            $fabricBody = $fabricResponse->json();
+            Log::info('fabric', $fabricBody);
 
-        if ($fabricBody['code'] == 200) {
-            return [
-                'success' => true,
-                'message' => 'User verified.',
-                'fabric_message' => $fabricBody['message']
-            ];
-        } else {
+            if ($fabricBody['code'] == 200) {
+                return [
+                    'success' => true,
+                    'message' => 'User verified.',
+                    'fabric_message' => $fabricBody['message']
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Authentication block from blockchain',
+                    'fabric_code' => $fabricBody['code'],
+                    'fabric_message' => $fabricBody['message'],
+                ];
+            }
+        } catch (\Exception $e) {
+
+            Log::error('approval verification failed: ' . $e->getMessage());
+
             return [
                 'success' => false,
-                'message' => 'Authentication block from blockchain',
-                'fabric_code' => $fabricBody['code'],
-                'fabric_message' => $fabricBody['message'],
+                'message' => 'Something went wrong, please try again',
             ];
         }
-
-    } catch (\Exception $e) {
-
-        Log::error('approval verification failed: ' . $e->getMessage());
-
-        return [
-            'success' => false,
-            'message' => 'Something went wrong, please try again',
-        ];
     }
-}
 
 
 

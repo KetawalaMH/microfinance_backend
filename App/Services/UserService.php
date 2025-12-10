@@ -190,6 +190,7 @@ class UserService implements UserServiceInterface
     {
         try {
             $out_data = $this->userSignUp($data);
+            Log::info('out_data', $out_data);
             if (!$out_data['success']) {
                 $output['success'] = false;
                 $output['message'] = $out_data['message'];

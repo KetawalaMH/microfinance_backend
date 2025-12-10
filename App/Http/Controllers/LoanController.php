@@ -232,4 +232,46 @@ class LoanController extends Controller
             ], 500);
         }
     }
+
+    public function getLoanTypeDetails(Request $request)
+    {
+        try {
+            $data = $request->all();
+            $result = $this->loanService->getLoanTypeDetails($data);
+            return response()->json($result);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ], 500);
+        }
+    }
+
+    public function markAsCollected(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'loan_id' => 'required|exists:loans,id',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first(),
+                    'data' => null
+                ], 422);
+            }
+            $data = $request->all();
+            $data['recorded_by'] = JWTAuth::user()->id;
+            $result = $this->loanService->markAsCollected($data);
+            return response()->json($result);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ], 500);
+        }
+    }
 }

@@ -73,4 +73,29 @@ class AdminController extends Controller
             ], 422);
         }
     }
+    public function rejectLoanRequest(Request $request)
+    {
+        try {
+            $valodator = Validator::make($request->all(), [
+                'loan_id' => 'required|exists:loans,id',
+            ]);
+            if ($valodator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $valodator->errors()->first(),
+                    'data' => null
+                ], 422);
+            }
+            $data = $request->all();
+            $data['approved_by'] = JWTAuth::user()->id;
+            $result = $this->adminService->rejectLoanRequest($data);
+            return response()->json($result);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ], 422);
+        }
+    }
 }

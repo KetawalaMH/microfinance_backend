@@ -21,4 +21,8 @@ interface LoanRepositoryInterface
     public function getAllLoanApplications(array $data);
 
     public function getTotalLoanData();
+
+    public function getLoanTypeDetails();
+
+    public function updateLoanStatus($id, $status);
 }
