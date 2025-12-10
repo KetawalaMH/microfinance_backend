@@ -252,24 +252,24 @@ class UserRepository implements UserRepositoryInterface
             }
 
             // Now authenticate with Blockchain (Fabric)
-            // $fabricResponse = Http::withOptions(['verify' => false])
-            //     ->post("{$this->blockchain_url}/ca/login", [
-            //         'org'    => $user->org,
-            //         'userId' => $user->full_name,
-            //         'aeskey' => $user->aes_key,
-            //     ]);
+            $fabricResponse = Http::withOptions(['verify' => false])
+                ->post("{$this->blockchain_url}/ca/login", [
+                    'org'    => $user->org,
+                    'userId' => $user->full_name,
+                    'aeskey' => $user->aes_key,
+                ]);
 
-            // // Blockchain failed → stop immediately
-            // if ($fabricResponse->failed() || $fabricResponse->status() !== 200) {
-            //     return [
-            //         'success' => false,
-            //         'message' => 'Blockchain authentication failed: ' . $fabricResponse->body(),
-            //         'data' => null
-            //     ];
-            // }
+            // Blockchain failed → stop immediately
+            if ($fabricResponse->failed() || $fabricResponse->status() !== 200) {
+                return [
+                    'success' => false,
+                    'message' => 'Blockchain authentication failed: ' . $fabricResponse->body(),
+                    'data' => null
+                ];
+            }
 
-            // // Get Fabric token safely
-            // $fabricToken = $fabricResponse->json()['message']['token'] ?? null;
+            // Get Fabric token safely
+            $fabricToken = $fabricResponse->json()['message']['token'] ?? null;
 
             return [
                 'success' => true,
