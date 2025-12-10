@@ -30,4 +30,6 @@ interface UserServiceInterface
     public function verifyOtp($email, $otp);
 
     public function updatePassword($id, $currentPassword, $newPassword);
+
+    public function approvalVerification($data);
 }

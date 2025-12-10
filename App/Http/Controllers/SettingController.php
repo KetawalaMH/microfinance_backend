@@ -49,7 +49,11 @@ class SettingController extends Controller
             $accountTypes = $this->settingService->getAccountTypes();
 
             return response()->json(
-                $accountTypes,
+                [
+                    'success' => true,
+                    'message' => 'Account types fetched successfully',
+                    'data' => $accountTypes,
+                ],
                 200
             );
         } catch (Exception $e) {

@@ -6,6 +6,7 @@ use App\Models\Loan;
 use App\Repositories\Interfaces\LoanRepositoryInterface;
 use App\Services\Interfaces\LoanServiceInterface;
 use App\Services\Interfaces\MemberServiceInterface;
+use App\Services\Interfaces\SettingServiceInterface;
 use App\Services\Interfaces\TransactionServiceInterface;
 use Carbon\Carbon;
 use Exception;
@@ -15,7 +16,6 @@ class LoanService implements LoanServiceInterface
 {
     private $loanRepository;
     private $memberService;
-
     private $transactionService;
 
     public function __construct(LoanRepositoryInterface $loanRepository, MemberServiceInterface $memberService, TransactionServiceInterface $transactionService)
@@ -74,6 +74,7 @@ class LoanService implements LoanServiceInterface
                 'remaining_amount' => $data['amount'],
                 'duration' => $loanType->duration,
                 'interest' => $loanType->max_interest_rate,
+                'status' => 'pending'
             ];
 
             $loan = $this->loanRepository->createLoanRequest($loanData);
@@ -489,5 +490,63 @@ class LoanService implements LoanServiceInterface
     private function calculateProgress($loanAmount, $remainingBalance)
     {
         return round(($loanAmount - $remainingBalance) / $loanAmount * 100, 2);
+    }
+
+    public function getLoanTypeDetails()
+    {
+        return $this->loanRepository->getLoanTypeDetails();
+    }
+
+    public function markAsCollected(array $data)
+    {
+        try {
+            $response = $this->loanRepository->updateLoanStatus($data['loan_id'], 'paid');
+            if (!$response['success']) {
+                return $response;
+            }
+            $logData = [
+                'done_by' => $data['recorded_by'],
+                'title' => 'Loan Marked As Collected',
+                'description' => 'Loan repayment completed',
+                'loan_id' => $data['loan_id'],
+            ];
+            $log = app(AdminService::class)->logAction($logData);
+            if (!$log['success']) {
+                return $log;
+            }
+            return [
+                'success' => true,
+                'message' => 'Loan marked as collected',
+                'data' => null
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    public function rejectLoanRequest($data)
+    {
+        try {
+            $response = $this->loanRepository->updateLoanStatus($data['loan_id'], 'rejected');
+            if (!$response['success']) {
+                return $response;
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Loan approved successfully.',
+                'data' => $response['data']
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
     }
 }

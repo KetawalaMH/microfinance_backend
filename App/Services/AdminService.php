@@ -104,4 +104,34 @@ class AdminService implements Interfaces\AdminServiceInterface
             ], 500);
         }
     }
+
+    public function logAction(array $data)
+    {
+        return $this->adminRepository->logAction($data);
+    }
+
+    public function rejectLoanRequest(array $data)
+    {
+        try {
+            $loanUpdate = $this->loanService->rejectLoanRequest($data);
+            if (!$loanUpdate['success']) {
+                Log::info($loanUpdate['message']);
+                return $loanUpdate;
+            }
+            $logData = [
+                'done_by' => $data['approved_by'],
+                'title' => 'Loan request rejected',
+                'description' => 'Loan request rejected by admin',
+                'loan_id' => $data['loan_id'],
+            ];
+            $log = $this->adminRepository->logAction($logData);
+            return $log;
+        } catch (Exception $e) {
+            $this->logError("transactions", $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => "Something went wrong: " . $e->getMessage()
+            ], 500);
+        }
+    }
 }

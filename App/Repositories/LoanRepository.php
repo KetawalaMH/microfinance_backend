@@ -214,6 +214,7 @@ class LoanRepository implements LoanRepositoryInterface
 
             $loans = Loan::with('borrower')
                 ->where($query)
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             return [
@@ -249,6 +250,51 @@ class LoanRepository implements LoanRepositoryInterface
                 'success' => true,
                 'message' => 'Loan data fetched successfully.',
                 'data' => $loans
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    public function getLoanTypeDetails()
+    {
+        try {
+            $loanTypes = LoanType::all();
+            return [
+                'success' => true,
+                'message' => 'Loan types fetched successfully.',
+                'data' => $loanTypes
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    public function updateLoanStatus($id, $status)
+    {
+        try {
+            $loan = Loan::find($id);
+            if (!$loan) {
+                return [
+                    'success' => false,
+                    'message' => 'Loan not found.',
+                    'data' => null
+                ];
+            }
+            $loan->status = $status;
+            $loan->save();
+            return [
+                'success' => true,
+                'message' => 'Loan status updated successfully.',
+                'data' => $loan
             ];
         } catch (Exception $e) {
             return [

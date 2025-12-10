@@ -158,12 +158,10 @@ class UserController extends Controller
                 $output['data'] = null;
                 $output['message'] = "Logout successful";
             }
-
         } catch (\Exception $e) {
             $output['success'] = false;
             $output['data'] = null;
             $output['message'] = "Something went wrong, please try again: " . $e->getMessage();
-
         }
         return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
     }
@@ -180,7 +178,6 @@ class UserController extends Controller
             $output['success'] = false;
             $output['data'] = null;
             $output['message'] = "Something went wrong, please try again: " . $e->getMessage();
-
         }
         return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
     }
@@ -212,7 +209,6 @@ class UserController extends Controller
                 'data' => $result['data'],
                 'filter' => $result['filter']
             ], 200);
-
         } catch (\Exception $e) {
             $url = "auth/users";
             $this->logError($url, $e->getMessage());
@@ -250,7 +246,6 @@ class UserController extends Controller
                 'message' => $result['message'],
                 'data' => $result['data']
             ], 200);
-
         } catch (\Exception $e) {
             $url = "auth/users/delete";
             $this->logError($url, $e->getMessage());
@@ -333,7 +328,6 @@ class UserController extends Controller
                 'message' => $result['message'],
                 'data' => $result['data']
             ], 200);
-
         } catch (\Exception $e) {
             $url = "auth/users/update";
             $this->logError($url, $e->getMessage());
@@ -378,8 +372,6 @@ class UserController extends Controller
                 'email_address' => 'required|email',
                 'full_name' => 'required|string|min:1|max:255',
                 'user_type_id' => 'required|integer',
-                'branch_id' => 'required|integer|exists:branches,id',
-                'department_id' => 'required|integer|exists:departments,id',
             ]);
 
             if ($validator->fails()) {
@@ -393,6 +385,8 @@ class UserController extends Controller
             $data['url'] = $request->url();
             $data['is_active'] = 0;
             $data['sent_by'] = JwtAuth::user()->id;
+            $data['branch_id'] = JwtAuth::user()->branch_id;
+            $data['department_id'] = JwtAuth::user()->department_id;
             //check esxisting invitation
 
             $out_data = $this->userService->addUser($data);
@@ -647,7 +641,6 @@ class UserController extends Controller
                     'token' => $token
                 ]
             ], status: 200);
-
         } catch (\Exception $e) {
             Log::error(message: 'Password setup failed: ' . $e->getMessage());
             return response()->json(data: [
@@ -682,7 +675,6 @@ class UserController extends Controller
                 'message' => 'Password updated successfully',
                 'data' => null
             ], status: 200);
-
         } catch (\Exception $e) {
             Log::error(message: 'Password setup failed: ' . $e->getMessage());
             return response()->json(data: [
@@ -700,7 +692,7 @@ class UserController extends Controller
             $data['url'] = $request->url();
             Log::info($data);
             $out_data = $this->userService->approvalVerification($data);
-             Log::info('responseC', $out_data);
+            Log::info('responseC', $out_data);
             $output['success'] = $out_data['success'];
             $output['data'] = $data;
             $output['message'] = $out_data['message'];
@@ -708,7 +700,6 @@ class UserController extends Controller
             $output['success'] = false;
             $output['data'] = null;
             $output['message'] = "Something went wrong, please try again: " . $e->getMessage();
-
         }
         return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
     }
@@ -791,7 +782,6 @@ class UserController extends Controller
                 'message' => 'All users added successfully',
                 'data' => null
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -799,7 +789,4 @@ class UserController extends Controller
             ], 500);
         }
     }
-
-
-
 }

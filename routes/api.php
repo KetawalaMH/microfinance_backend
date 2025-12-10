@@ -52,6 +52,7 @@ Route::group(attributes: ['middleware' => ['jwt.auth']], routes: function (): vo
     //----------admin ------------
     Route::post(uri: '/auth/admin/approve-member-request', action: [AdminController::class, 'approveMemberRequest']);
     Route::post(uri: '/auth/admin/approve-loan-request', action: [AdminController::class, 'approveLoanRequest']);
+    Route::post(uri: '/auth/admin/reject-loan-request', action: [AdminController::class, 'rejectLoanRequest']);
 
     //-----------loan-------------
     Route::post(uri: '/auth/loan/add-loan-application', action: [LoanController::class, 'createLoanRequest']);
@@ -62,6 +63,8 @@ Route::group(attributes: ['middleware' => ['jwt.auth']], routes: function (): vo
     Route::post(uri: '/auth/loan/add-installments', action: [LoanController::class, 'addInstallments']);
     Route::get(uri: '/auth/loan/get-all-loan-applications', action: [LoanController::class, 'getAllLoanApplications']);
     Route::get(uri: '/auth/loan/get-loan-details', action: [LoanController::class, 'getLoanDetails']);
+    Route::get(uri: '/auth/loan/get-loan-type-details', action: [LoanController::class, 'getLoanTypeDetails']);
+    Route::post(uri: '/auth/loan/mark-as-collected', action: [LoanController::class, 'markAsCollected']);
 
     //-----dashboard and notifications-----
     Route::get(uri: '/auth/dashboard/get-dashboard-data', action: [SettingController::class, 'getDashboardData']);
