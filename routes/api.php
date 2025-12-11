@@ -53,6 +53,8 @@ Route::group(attributes: ['middleware' => ['jwt.auth']], routes: function (): vo
     Route::post(uri: '/auth/admin/approve-member-request', action: [AdminController::class, 'approveMemberRequest']);
     Route::post(uri: '/auth/admin/approve-loan-request', action: [AdminController::class, 'approveLoanRequest']);
     Route::post(uri: '/auth/admin/reject-loan-request', action: [AdminController::class, 'rejectLoanRequest']);
+    Route::post(uri: '/auth/admin/approve-saving-account', action: [AdminController::class, 'approveSavingAccount']);
+    Route::post(uri: '/auth/admin/reject-saving-account', action: [AdminController::class, 'rejectSavingAccount']);
 
     //-----------loan-------------
     Route::post(uri: '/auth/loan/add-loan-application', action: [LoanController::class, 'createLoanRequest']);

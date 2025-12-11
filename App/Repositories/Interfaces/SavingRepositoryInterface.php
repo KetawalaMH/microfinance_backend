@@ -15,4 +15,6 @@ interface SavingRepositoryInterface
     public function getSavingAccountById($id);
 
     public function getTotalSavingData();
+
+    public function updateSavingStatus($id, $status);
 }

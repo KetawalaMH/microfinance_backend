@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\SavingAccount;
 use App\Repositories\Interfaces\SavingRepositoryInterface;
+use Exception;
 
 class SavingRepository implements SavingRepositoryInterface
 {
@@ -105,5 +106,32 @@ class SavingRepository implements SavingRepositoryInterface
         return SavingAccount::whereIn('status', ['active', 'closed'])
             ->select('id', 'member_id', 'current_balance', 'created_at', 'status')
             ->get();
+    }
+
+    public function updateSavingStatus($id, $status)
+    {
+        try {
+            $account = SavingAccount::find($id);
+            if (!$account) {
+                return [
+                    'success' => false,
+                    'message' => 'Account not found.',
+                    'data' => null
+                ];
+            }
+            $account->status = $status;
+            $account->save();
+            return [
+                'success' => true,
+                'message' => 'Account status updated successfully.',
+                'data' => $account
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
     }
 }
