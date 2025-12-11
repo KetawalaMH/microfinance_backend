@@ -6,6 +6,7 @@ use App\Models\Admin;
 use App\Repositories\Interfaces\AdminRepositoryInterface;
 use App\Services\Interfaces\LoanServiceInterface;
 use App\Services\Interfaces\MemberServiceInterface;
+use App\Services\Interfaces\SavingServiceInterface;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
@@ -16,11 +17,18 @@ class AdminService implements Interfaces\AdminServiceInterface
 
     private $loanService;
 
-    public function __construct(AdminRepositoryInterface $adminRepository, MemberServiceInterface $memberService, LoanServiceInterface $loanService)
-    {
+    private $savingService;
+
+    public function __construct(
+        AdminRepositoryInterface $adminRepository,
+        MemberServiceInterface $memberService,
+        LoanServiceInterface $loanService,
+        SavingServiceInterface $savingService
+    ) {
         $this->adminRepository = $adminRepository;
         $this->memberService = $memberService;
         $this->loanService = $loanService;
+        $this->savingService = $savingService;
     }
 
     protected function logError($url, $error_message)
@@ -123,6 +131,54 @@ class AdminService implements Interfaces\AdminServiceInterface
                 'title' => 'Loan request rejected',
                 'description' => 'Loan request rejected by admin',
                 'loan_id' => $data['loan_id'],
+            ];
+            $log = $this->adminRepository->logAction($logData);
+            return $log;
+        } catch (Exception $e) {
+            $this->logError("transactions", $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => "Something went wrong: " . $e->getMessage()
+            ], 500);
+        }
+    }
+    public function approveSavingAccount(array $data)
+    {
+        try {
+            $accountUpdate = $this->savingService->approveSavingAccount($data);
+            if (!$accountUpdate['success']) {
+                Log::info($accountUpdate['message']);
+                return $accountUpdate;
+            }
+            $logData = [
+                'done_by' => $data['approved_by'],
+                'title' => 'Saving account approved',
+                'description' => 'Saving Account approved by admin',
+                'account_id' => $data['account_id'],
+            ];
+            $log = $this->adminRepository->logAction($logData);
+            return $log;
+        } catch (Exception $e) {
+            $this->logError("transactions", $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => "Something went wrong: " . $e->getMessage()
+            ], 500);
+        }
+    }
+    public function rejectSavingAccount(array $data)
+    {
+        try {
+            $loanUpdate = $this->savingService->rejectSavingAccount($data);
+            if (!$loanUpdate['success']) {
+                Log::info($loanUpdate['message']);
+                return $loanUpdate;
+            }
+            $logData = [
+                'done_by' => $data['approved_by'],
+                'title' => 'Saving account rejected',
+                'description' => 'Saving account was rejected by admin',
+                'account_id' => $data['account_id'],
             ];
             $log = $this->adminRepository->logAction($logData);
             return $log;

@@ -9,6 +9,7 @@ use App\Services\Interfaces\MemberServiceInterface;
 use App\Services\Interfaces\SavingServiceInterface;
 use App\Services\Interfaces\TransactionServiceInterface;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Support\Facades\Log as FacadesLog;
 use Log;
 
@@ -261,5 +262,48 @@ class SavingService implements SavingServiceInterface
             'total_interest'  => $totalInterest,
             'this_month'      => $thisMonth,
         ];
+    }
+
+    public function approveSavingAccount($data)
+    {
+        try {
+            $response = $this->repository->updateSavingStatus($data['account_id'], 'active');
+            if (!$response['success']) {
+                return $response;
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Saving account approved successfully.',
+                'data' => $response['data']
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+    public function rejectSavingAccount($data)
+    {
+        try {
+            $response = $this->repository->updateSavingStatus($data['account_id'], 'inactive');
+            if (!$response['success']) {
+                return $response;
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Saving account rejected successfully.',
+                'data' => $response['data']
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
     }
 }

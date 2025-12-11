@@ -98,4 +98,54 @@ class AdminController extends Controller
             ], 422);
         }
     }
+    public function approveSavingAccount(Request $request)
+    {
+        try {
+            $valodator = Validator::make($request->all(), [
+                'account_id' => 'required|exists:saving_accounts,id',
+            ]);
+            if ($valodator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $valodator->errors()->first(),
+                    'data' => null
+                ], 422);
+            }
+            $data = $request->all();
+            $data['approved_by'] = JWTAuth::user()->id;
+            $result = $this->adminService->approveSavingAccount($data);
+            return response()->json($result);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ], 422);
+        }
+    }
+    public function rejectSavingAccount(Request $request)
+    {
+        try {
+            $valodator = Validator::make($request->all(), [
+                'account_id' => 'required|exists:saving_accounts,id',
+            ]);
+            if ($valodator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $valodator->errors()->first(),
+                    'data' => null
+                ], 422);
+            }
+            $data = $request->all();
+            $data['approved_by'] = JWTAuth::user()->id;
+            $result = $this->adminService->rejectSavingAccount($data);
+            return response()->json($result);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ], 422);
+        }
+    }
 }

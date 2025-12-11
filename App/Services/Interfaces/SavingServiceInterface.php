@@ -16,4 +16,7 @@ interface SavingServiceInterface
     public function getSavingAccountDetails($id);
 
     public function calculateSavingStats();
+
+    public function approveSavingAccount(array $data);
+    public function rejectSavingAccount(array $data);
 }

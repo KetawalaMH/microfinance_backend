@@ -13,4 +13,6 @@ interface AdminServiceInterface
     public function logAction(array $data);
 
     public function rejectLoanRequest(array $data);
+    public function approveSavingAccount(array $data);
+    public function rejectSavingAccount(array $data);
 }
