@@ -48,6 +48,36 @@ class AdminController extends Controller
         }
     }
 
+    public function rejectMemberRequest(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'member_id' => 'required|exists:members,id',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first(),
+                    'data' => null
+                ], 422);
+            }
+
+            $data = $request->all();
+            $data['done_by'] = JWTAuth::user()->id;
+            Log::info('1 lst log');
+
+            $respons = $this->adminService->rejectMemberRquest($data);
+            return response()->json($respons, 201);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create member: ' . $e->getMessage(),
+                'data' => null
+            ], 500);
+        }
+    }
+
     public function approveLoanRequest(Request $request)
     {
         try {

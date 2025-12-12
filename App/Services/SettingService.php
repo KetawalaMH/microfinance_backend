@@ -46,23 +46,23 @@ class SettingService implements SettingServiceInterface
         try {
             $loanService = app()->make(LoanServiceInterface::class);
             $totalLoans = $loanService->calculateLoanStats();
-            if (!$totalLoans['success']) {
-                return $totalLoans;
-            }
+            // if (!$totalLoans['success']) {
+            //     return $totalLoans;
+            // }
             $loanData = $totalLoans['data'];
 
             $savingService = app()->make(SavingServiceInterface::class);
             $totalSaving = $savingService->calculateSavingStats();
-            if (!$totalSaving['success']) {
-                return $totalSaving;
-            }
+            // if (!$totalSaving['success']) {
+            //     return $totalSaving;
+            // }
             $savingData = $totalSaving['data'];
 
             $memberService = app()->make(MemberServiceInterface::class);
             $totalMembers = $memberService->getMemberStats();
-            if (!$totalMembers['success']) {
-                return $totalMembers;
-            }
+            // if (!$totalMembers['success']) {
+            //     return $totalMembers;
+            // }
 
             $accountData = $totalMembers['data'];
             return [

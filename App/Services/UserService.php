@@ -213,7 +213,7 @@ class UserService implements UserServiceInterface
                 $output['success'] = false;
                 $output['message'] = $invitation['message'];
                 $output['data'] = null;
-                return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
+                return $output;
             }
             //send invitation email
             try {
@@ -223,16 +223,22 @@ class UserService implements UserServiceInterface
                 Log::error('Failed to send invitation email: ' . $e->getMessage());
 
                 // Optionally return or throw a custom response
-                return response()->json([
+                return [
                     'success' => false,
-                    'message' => 'Failed to send the invitation email. Please try again later.'
-                ], 500);
+                    'message' => 'Failed to send the invitation email. Please try again later.',
+                    'data' => null
+                ];
             }
+
+            $output['success'] = true;
+            $output['message'] = $invitation['message'];
+            $output['data'] = null;
+            return $output;
         } catch (\Exception $e) {
             $output['success'] = false;
             $output['message'] = $e->getMessage();
             $output['data'] = null;
-            return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
+            return $output;
         }
     }
 

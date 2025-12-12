@@ -680,7 +680,7 @@ class UserRepository implements UserRepositoryInterface
     public function saveOtp(array $data): array
     {
         // Delete old OTPs for this email
-        Otp::where(column: 'email', operator: $data['email'])->delete();
+        Otp::where(column: 'email_address', operator: $data['email_address'])->delete();
 
         Otp::create(attributes: $data);
 

@@ -390,6 +390,8 @@ class UserController extends Controller
             //check esxisting invitation
 
             $out_data = $this->userService->addUser($data);
+            LOg::info('output: ');
+            Log::info($out_data);
             if (!$out_data['success']) {
                 $output['success'] = false;
                 $output['message'] = $out_data['message'];
