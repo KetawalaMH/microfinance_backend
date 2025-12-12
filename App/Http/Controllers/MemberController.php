@@ -28,7 +28,6 @@ class MemberController extends Controller
             'dob' => 'date',
             'occupation' => 'string|max:100',
             'NIC' => 'required|string|unique:members,NIC|min:10|max: 13',
-            'is_active' => 'boolean'
         ]);
         if ($validator->fails()) {
             return response()->json([

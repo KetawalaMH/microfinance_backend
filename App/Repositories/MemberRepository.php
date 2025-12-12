@@ -53,6 +53,7 @@ class MemberRepository implements MemberRepositoryInterface
             $formatedMembers = $members->map(function ($member) {
                 return [
                     'id' => $member->id,
+                    'userId' => $member->id,
                     'name' => $member->full_name,
                     'contact' => $member->mobile_number,
                     'createdAt' => $member->created_at->format('Y-m-d'),

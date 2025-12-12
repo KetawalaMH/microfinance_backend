@@ -116,7 +116,12 @@ class MemberService implements MemberServiceInterface
                 return [
                     'success' => false,
                     'message' => 'Active members not found.',
-                    'data' => null
+                    'data' => [
+                        'total_active_members' => 0,
+                        'current_month_new_members' => 0,
+                        'last_month_new_members' => 0,
+                        'growth_rate' => round(0, 2),
+                    ]
                 ];
             }
 

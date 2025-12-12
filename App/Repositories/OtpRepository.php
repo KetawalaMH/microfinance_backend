@@ -5,11 +5,14 @@ namespace App\Repositories;
 use App\Models\Otp;
 use App\Repositories\Interfaces\OtpRepositoryInterface;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class OtpRepository implements OtpRepositoryInterface
 {
     public function createOrUpdateOtp(string $identifier, string $otp, int $minutes)
     {
+        Log::info('identfier: ');
+        Log::info($identifier);
         return Otp::updateOrCreate(
             ['email_address' => $identifier],
             [
