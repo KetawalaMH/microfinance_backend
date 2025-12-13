@@ -25,4 +25,7 @@ interface LoanRepositoryInterface
     public function getLoanTypeDetails();
 
     public function updateLoanStatus($id, $status);
+
+    public function getExistingDebts($memberId);
+    public function getLoanDefaults($memberId);
 }

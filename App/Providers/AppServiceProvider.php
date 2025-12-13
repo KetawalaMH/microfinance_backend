@@ -14,6 +14,7 @@ use App\Repositories\SavingRepository;
 use App\Repositories\TransactionRepository;
 use App\Services\AdminService;
 use App\Services\BankService;
+use App\Services\HuggingfaceModelService;
 use App\Services\Interfaces\AdminServiceInterface;
 use App\Services\Interfaces\BankServiceInterface;
 use App\Services\Interfaces\MemberServiceInterface;
@@ -40,6 +41,7 @@ use App\Repositories\Interfaces\BankRepositoryInterface;
 use App\Repositories\BankRepository;
 use App\Repositories\Interfaces\LoanRepositoryInterface;
 use App\Repositories\LoanRepository;
+use App\Services\Interfaces\HuggingfaceModelServiceInterface;
 use App\Services\Interfaces\LoanServiceInterface;
 use App\Services\LoanService;
 
@@ -68,6 +70,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(OtpRepositoryInterface::class, OtpRepository::class);
         $this->app->bind(LoanRepositoryInterface::class, LoanRepository::class);
         $this->app->bind(LoanServiceInterface::class, LoanService::class);
+        $this->app->bind(HuggingfaceModelServiceInterface::class, HuggingfaceModelService::class);
     }
 
     /**
