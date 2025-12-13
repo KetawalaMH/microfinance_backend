@@ -25,6 +25,7 @@ class LoanController extends Controller
                 'amount' => 'required|numeric',
                 'purpose' => 'required|string',
                 'loan_type_id' => 'required|exists:loan_types,id',
+                'guarantor1_id' => 'required|exists:members,id',
             ]);
 
             if ($validator->fails()) {

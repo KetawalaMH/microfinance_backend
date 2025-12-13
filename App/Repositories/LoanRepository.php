@@ -304,4 +304,39 @@ class LoanRepository implements LoanRepositoryInterface
             ];
         }
     }
+
+    public function getExistingDebts($memberId)
+    {
+        try {
+            $loans = Loan::where('borrower_id', $memberId)->where('status', 'approved or due')->sum('amount');
+            return [
+                'success' => true,
+                'message' => 'Loan fetched successfully.',
+                'data' => $loans
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => 0
+            ];
+        }
+    }
+    public function getLoanDefaults($memberId)
+    {
+        try {
+            $loans = Loan::where('borrower_id', $memberId)->where('status', 'due')->sum('amount');
+            return [
+                'success' => true,
+                'message' => 'Loan fetched successfully.',
+                'data' => $loans
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => 0
+            ];
+        }
+    }
 }
