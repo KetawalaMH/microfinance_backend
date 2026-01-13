@@ -28,4 +28,8 @@ interface LoanRepositoryInterface
 
     public function getExistingDebts($memberId);
     public function getLoanDefaults($memberId);
+
+    public function savePrediction(array $data);
+
+    public function getPrediction($loanId);
 }
