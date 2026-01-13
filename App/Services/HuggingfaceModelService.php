@@ -16,7 +16,7 @@ class HuggingfaceModelService implements HuggingfaceModelServiceInterface
         $modelId = "pasindu-1999/loan_prediction_tinyllama";
 
         $this->apiUrl = "https://router.huggingface.co/hf-inference/models/{$modelId}";
-        $this->apiKey = config('services.huggingface.api_key');
+        // $this->apiKey = config('services.huggingface.api_key');
     }
 
     private function buildPrompt(array $data): string
