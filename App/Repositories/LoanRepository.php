@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Loan;
 use App\Models\LoanDocument;
+use App\Models\LoanPrediction;
 use App\Models\LoanType;
 use App\Repositories\Interfaces\LoanRepositoryInterface;
 use Exception;
@@ -336,6 +337,42 @@ class LoanRepository implements LoanRepositoryInterface
                 'success' => false,
                 'message' => $e->getMessage(),
                 'data' => 0
+            ];
+        }
+    }
+
+    public function savePrediction($data)
+    {
+        try {
+            $prediction = LoanPrediction::create($data);
+            return [
+                'success' => true,
+                'message' => 'Loan status updated successfully.',
+                'data' => $prediction
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    public function getPrediction($loanId)
+    {
+        try {
+            $prediction = LoanPrediction::where('loan_id', $loanId)->first();
+            return [
+                'success' => true,
+                'message' => 'Loan prediction fetched successfully.',
+                'data' => $prediction
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
             ];
         }
     }

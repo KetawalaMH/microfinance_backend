@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Services\Interfaces\HuggingfaceModelServiceInterface;
+use GrahamCampbell\ResultType\Success;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -13,10 +14,7 @@ class HuggingfaceModelService implements HuggingfaceModelServiceInterface
 
     public function __construct()
     {
-        $modelId = "pasindu-1999/loan_prediction_tinyllama";
-
-        $this->apiUrl = "https://router.huggingface.co/hf-inference/models/{$modelId}";
-        // $this->apiKey = config('services.huggingface.api_key');
+        $this->apiUrl = "http://34.170.190.201/predict";
     }
 
     private function buildPrompt(array $data): string
@@ -58,19 +56,39 @@ PROMPT;
     {
         $prompt = $this->buildPrompt($data);
 
-        $response = Http::withOptions(['verify' => false])->withToken($this->apiKey)
+        $response = Http::withOptions(['verify' => false])
             ->timeout(120)
             ->retry(2, 1000)
             ->post($this->apiUrl, [
-                'inputs' => $prompt,
-                'parameters' => [
-                    'max_new_tokens' => 300,
-                    'temperature' => 0.3,
-                ],
+                'prompt' => $prompt,
             ]);
 
-        Log::info('HF response status', ['status' => $response->status()]);
-        Log::info('HF response body', ['body' => $response->body()]);
+        $hfResponse = json_decode($response, true); // $responseBody = HF raw response
+        Log::info($hfResponse);
+
+        // // Decode the inner "body"
+        // $innerBody = json_decode($hfResponse['body'], true);
+
+        // This is the actual text from the model
+        $text = $hfResponse['response'];
+
+        $data = [];
+
+        preg_match('/Loan Eligibility:\s*(.*)/', $text, $m);
+        $data['loan_eligibility'] = $m[1] ?? null;
+
+        preg_match('/Repayment Capacity:\s*(.*)/', $text, $m);
+        $data['repayment_capacity'] = $m[1] ?? null;
+
+        preg_match('/Fraud Risk:\s*(.*)/', $text, $m);
+        $data['fraud_risk'] = $m[1] ?? null;
+
+        preg_match('/Optimal Tenure:\s*(.*)/', $text, $m);
+        $data['optimal_tenure'] = $m[1] ?? null;
+
+        preg_match('/Recommended Loan Amount:\s*(.*)/', $text, $m);
+        $data['recommended_loan_amount'] = $m[1] ?? null;
+
 
         if ($response->failed()) {
             return [
@@ -80,6 +98,10 @@ PROMPT;
             ];
         }
 
-        return $response->json();
+        return [
+            'success' => true,
+            'message' => 'Prediction suceeded',
+            'data' => $data,
+        ];
     }
 }
