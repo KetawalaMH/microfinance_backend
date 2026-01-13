@@ -4,15 +4,12 @@ namespace App\Services;
 
 use App\Models\Loan;
 use App\Repositories\Interfaces\LoanRepositoryInterface;
-use App\Services\Interfaces\HuggingfaceModelServiceInterface;
 use App\Services\Interfaces\LoanServiceInterface;
 use App\Services\Interfaces\MemberServiceInterface;
 use App\Services\Interfaces\SettingServiceInterface;
 use App\Services\Interfaces\TransactionServiceInterface;
 use Carbon\Carbon;
-use DateTime;
 use Exception;
-use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 
 class LoanService implements LoanServiceInterface
@@ -21,18 +18,11 @@ class LoanService implements LoanServiceInterface
     private $memberService;
     private $transactionService;
 
-    private $hugingfaceModelService;
-
-    public function __construct(
-        LoanRepositoryInterface $loanRepository,
-        MemberServiceInterface $memberService,
-        TransactionServiceInterface $transactionService,
-        HuggingfaceModelServiceInterface $huggingfacemodelService
-    ) {
+    public function __construct(LoanRepositoryInterface $loanRepository, MemberServiceInterface $memberService, TransactionServiceInterface $transactionService)
+    {
         $this->loanRepository = $loanRepository;
         $this->memberService = $memberService;
         $this->transactionService = $transactionService;
-        $this->hugingfaceModelService = $huggingfacemodelService;
     }
 
     public function createLoanRequest($data)
@@ -88,44 +78,6 @@ class LoanService implements LoanServiceInterface
             ];
 
             $loan = $this->loanRepository->createLoanRequest($loanData);
-            if (!$loan['success']) {
-                return $loan;
-            }
-            $loan = $loan['data'];
-
-            $existingDebts = $this->loanRepository->getExistingDebts($member['id']);
-            $loanDefaults = $this->loanRepository->getLoanDefaults($member['id']);
-
-            $guarantor1 = $this->memberService->getMemberById($data['guarantor1_id']);
-            $guarantor1 = $guarantor1['data'];
-
-
-            $promptData = [
-                'Customer_National_ID' => $member['nic'],
-                'Age' => $this->calculateAge($member['dob']),
-                'Employment' => $member['occupation'],
-                'Income' => $this->getRandomNumber(10000, 150000),
-                'Employment_Years' => $this->getRandomNumber(1, 40),
-                'Business_Type' => $member['occupaton'],
-                'Existing_Debts' => $existingDebts['data'],
-                'Previous_Loan_History' => 'moderate',
-                'Previous_Loan_Defaults' => $loanDefaults['data'],
-                'Reason_for_Loan_Defaults' => '',
-                'Loan_Purpose' => $data['purpose'],
-                'Assets' => $this->getRandomNumber(20000, 1000000),
-                'Guarantee_National_ID' => $guarantor1['nic'],
-                'Guarantee_Employment' => $guarantor1['occupation'],
-                'Guarantee_Income' => $this->getRandomNumber(10000, 150000),
-            ];
-
-            //get loan predictons
-            $loanPredictions = $this->hugingfaceModelService->predict($promptData);
-
-            Log::info($loanPredictions);
-
-            ///save loan predictions
-            // $this->loanRepository->saveLoanPredictions($loan['id'], $loanPredictions);
-
 
             return $loan;
         } catch (Exception $e) {
@@ -524,7 +476,7 @@ class LoanService implements LoanServiceInterface
         // EMI formula:
         // EMI = P * r * (1+r)^n / ((1+r)^n - 1)
         $emi = ($loanAmount * $monthlyRate * pow(1 + $monthlyRate, $totalInstallments))
-            / (pow(1 + $monthlyRate, $totalInstallments) - 1);
+            / (pow(1 + $monthlyRate, $totalInstallments+1) - 1);
 
         // Remaining loan balance formula:
         // B = P * (1+r)^k - EMI * ((1+r)^k - 1) / r
