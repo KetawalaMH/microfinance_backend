@@ -24,7 +24,7 @@ class Loan extends Model
         'paid_amount',
         'remaining_amount',
         'documents',
-        'aprroved_by',
+        'approved_by',
         'submitted_by',
         'approved_date',
         'repayment_start_date',

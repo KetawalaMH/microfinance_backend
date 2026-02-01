@@ -213,7 +213,7 @@ class LoanRepository implements LoanRepositoryInterface
                 'loan_type_id' => $data['loan_type_id'] ?? null
             ]);
 
-            $loans = Loan::with('borrower')
+            $loans = Loan::with(['borrower', 'loanType'])
                 ->where($query)
                 ->orderBy('created_at', 'desc')
                 ->get();

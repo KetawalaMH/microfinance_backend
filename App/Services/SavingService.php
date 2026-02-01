@@ -114,7 +114,7 @@ class SavingService implements SavingServiceInterface
 
             $accountInfomation = [
                 'account_holder' => $savingAccount->member->full_name,
-                'email_addres' => $savingAccount->member->email_addres,
+                'email_address' => $savingAccount->member->email_address,
                 'current_balance' => $savingAccount->current_balance,
                 'interest_rate' => $savingAccount->accountType->interest_rate,
                 'savingAccount_catogery' => $savingAccount->accountType->savingAccount_type,

@@ -79,7 +79,7 @@ class LoanService implements LoanServiceInterface
                 'remaining_amount' => $data['amount'],
                 'duration' => $loanType->duration,
                 'interest' => $loanType->max_interest_rate,
-                'status' => 'pending'
+                'status' => 'draft'
             ];
 
             $preditionData = [
@@ -156,46 +156,33 @@ class LoanService implements LoanServiceInterface
                     'data' => null
                 ];
             }
-            $gaurantor2 = $this->memberService->getMemberById($data['guarantor2_id']);
-            if (!$gaurantor2['success']) {
-                return $gaurantor2;
-            }
-            if ($gaurantor2['data']['status'] != 'active') {
-                return [
-                    'success' => false,
-                    'message' => 'Gaurantor 2 is not active',
-                    'data' => null
-                ];
-            }
+            $gaurantor2 = null;
+            if (isset($data['guarantor2_id']) && $data['guarantor2_id']) {
+                $gaurantor2 = $this->memberService->getMemberById($data['guarantor2_id']);
+                if (!$gaurantor2['success']) {
+                    return $gaurantor2;
+                }
+                if ($gaurantor2['data']['status'] != 'active') {
+                    return [
+                        'success' => false,
+                        'message' => 'Gaurantor 2 is not active',
+                        'data' => null
+                    ];
+                }
+                $gaurantor2 = $gaurantor2['data'];
 
-            //validate gaurentor eligibility
-            $gaurantor1 = $gaurantor1['data'];
-            $gaurantor2 = $gaurantor2['data'];
+                $gaurantor2DueLoan = $this->loanRepository->getMemberDueLoans($gaurantor2->id);
+                if (!$gaurantor2DueLoan['success']) {
+                    return $gaurantor2DueLoan;
+                }
 
-            $gaurantor1DueLoan = $this->loanRepository->getMemberDueLoans($gaurantor1->id);
-            if (!$gaurantor1DueLoan['success']) {
-                return $gaurantor1DueLoan;
-            }
-
-            if ($gaurantor1DueLoan['data']->count() > 0) {
-                return [
-                    'success' => false,
-                    'message' => 'Guarantor 1 has due loans',
-                    'data' => null
-                ];
-            }
-
-            $gaurantor2DueLoan = $this->loanRepository->getMemberDueLoans($gaurantor2->id);
-            if (!$gaurantor2DueLoan['success']) {
-                return $gaurantor2DueLoan;
-            }
-
-            if ($gaurantor2DueLoan['data']->count() > 0) {
-                return [
-                    'success' => false,
-                    'message' => 'Gaurantor 2 has due loans',
-                    'data' => null
-                ];
+                if ($gaurantor2DueLoan['data']->count() > 0) {
+                    return [
+                        'success' => false,
+                        'message' => 'Gaurantor 2 has due loans',
+                        'data' => null
+                    ];
+                }
             }
 
             //add gaurantors
@@ -208,8 +195,8 @@ class LoanService implements LoanServiceInterface
                 'amount' => $loan->amount,
                 'purpose' => $loan->purpose,
                 'guarentors' => [
-                    'guarantor1' => $loan->gurantor1->full_name,
-                    'guarantor2' => $loan->gurantor2->full_name,
+                    'guarantor1' => $loan->gurantor1->full_name ?? $loan->gurantor1->name ?? 'N/A',
+                    'guarantor2' => $loan->gurantor2->full_name ?? $loan->gurantor2->name ?? 'N/A',
                 ]
             ];
             return [
@@ -309,9 +296,9 @@ class LoanService implements LoanServiceInterface
             $formattedLoanData = $loans->map(function ($loan) {
                 return [
                     'loan_id' => $loan->id,
-                    'borrower_name' => $loan->borrower->name ?? null,
+                    'borrower' => $loan->borrower->full_name ?? $loan->borrower->name ?? null,
                     'amount' => $loan->amount,
-                    'category' => $loan->category,
+                    'category' => $loan->loanType->loan_type ?? null,
                     'status' => $loan->status,
                 ];
             });
@@ -340,8 +327,8 @@ class LoanService implements LoanServiceInterface
             $loan = $loan['data'];
 
             $loanInfomation = [
-                'borrower' => $loan->borrower->full_name,
-                'email_addres' => $loan->borrower->email_addres,
+                'borrower' => $loan->borrower->full_name ?? $loan->borrower->name ?? null,
+                'email_address' => $loan->borrower->email_address ?? $loan->borrower->email_addres ?? null,
                 'amount' => $loan->amount,
                 'interest_rate' => $loan->loanType->max_interest_rate,
                 'loan_catogery' => $loan->loanType->loan_type,

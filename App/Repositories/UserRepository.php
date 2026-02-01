@@ -144,28 +144,56 @@ class UserRepository implements UserRepositoryInterface
                 // $token = JWTAuth::fromUser($new_user);
 
 
-                $fabricResponse = Http::withOptions([
-                    'verify' => false
-                ])->post("$this->blockchain_url/ca/registerUser", [
-                    'org' => $role->org,
-                    'userId' => $full_name,
-                    'role' => $role->user_type,
-                    'affiliation' => 'org2.department1',
-                    'aesKey' => $aes_key
-                ]);
+                // $fabricResponse = Http::withOptions([
+                //     'verify' => false
+                // ])->post("$this->blockchain_url/ca/registerUser", [
+                //     'org' => $role->org,
+                //     'userId' => $full_name,
+                //     'role' => $role->user_type,
+                //     'affiliation' => 'org2.department1',
+                //     'aesKey' => $aes_key
+                // ]);
 
-                if ($fabricResponse->failed()) {
-                    $output['success'] = false;
-                    $output['message'] = 'Fabric registration failed: ' . $fabricResponse->body();
-                    $output['data'] = null;
-                    Log::error('Fabric registration failed: ' . $fabricResponse->body());
-                }
+                // if ($fabricResponse->failed()) {
+                //     $output['success'] = false;
+                //     $output['message'] = 'Fabric registration failed: ' . $fabricResponse->body();
+                //     $output['data'] = null;
+                //     Log::error('Fabric registration failed: ' . $fabricResponse->body());
+                // }
 
-                Log::info($fabricResponse);
+                // Log::info($fabricResponse);
 
-                if ($fabricResponse->status() == 200) {
+                // if ($fabricResponse->status() == 200) {
 
-                    $new_user = User::create([
+                //     $new_user = User::create([
+                //         'user_type_id' => $user_type_id,
+                //         'full_name' => $full_name,
+                //         'email_address' => $email_address,
+                //         'mobile_number' => $mobile,
+                //         'password' => Hash::make($password),
+                //         'is_active' => $is_active,
+                //         'created_at' => $date_time,
+                //         'updated_at' => $date_time,
+                //         'aes_key' => $aes_key,
+                //         'org' => $role->org,
+                //         'branch_id' => $branch_id,
+                //         'department_id' => $department_id
+                //     ]);
+
+                //     $output['success'] = true;
+                //     $output['message'] = "User sign up success";
+                //     $output['data']['user_id'] = isset($new_user->id) ? intval($new_user->id) : 0;
+                //     $output['data']['full_name'] = isset($new_user->full_name) ? $new_user->full_name : null;
+                //     $output['data']['email_address'] = isset($new_user->email_address) ? $new_user->email_address : null;
+                //     // $output['data']['token'] = $token;
+
+                // } else {
+                //     $output['success'] = false;
+                //     $output['message'] = 'Fabric registration failed: ' . $fabricResponse->body();
+                //     $output['data'] = null;
+                //     Log::error('Fabric registration failed: ' . $fabricResponse->body());
+                // }   // $output['data']['token'] = $token;
+                $new_user = User::create([
                         'user_type_id' => $user_type_id,
                         'full_name' => $full_name,
                         'email_address' => $email_address,
@@ -179,20 +207,7 @@ class UserRepository implements UserRepositoryInterface
                         'branch_id' => $branch_id,
                         'department_id' => $department_id
                     ]);
-
-                    $output['success'] = true;
-                    $output['message'] = "User sign up success";
-                    $output['data']['user_id'] = isset($new_user->id) ? intval($new_user->id) : 0;
-                    $output['data']['full_name'] = isset($new_user->full_name) ? $new_user->full_name : null;
-                    $output['data']['email_address'] = isset($new_user->email_address) ? $new_user->email_address : null;
-                    // $output['data']['token'] = $token;
-
-                } else {
-                    $output['success'] = false;
-                    $output['message'] = 'Fabric registration failed: ' . $fabricResponse->body();
-                    $output['data'] = null;
-                    Log::error('Fabric registration failed: ' . $fabricResponse->body());
-                }   // $output['data']['token'] = $token;
+                $token = JWTAuth::fromUser($new_user);
             }
         } catch (\Exception $e) {
             $url = isset($data['url']) ? $data['url'] : null;
@@ -204,6 +219,10 @@ class UserRepository implements UserRepositoryInterface
             $output['data'] = null;
             // Log::error('Fabric registration failed: ' . $fabricResponse->body());
         }
+        $output['data']['user'] = null;
+        $output['success'] = true;
+        $output['message'] = "User sign up success";
+
         return $output;
     }
 
@@ -252,24 +271,24 @@ class UserRepository implements UserRepositoryInterface
             }
 
             // Now authenticate with Blockchain (Fabric)
-            $fabricResponse = Http::withOptions(['verify' => false])
-                ->post("{$this->blockchain_url}/ca/login", [
-                    'org'    => $user->org,
-                    'userId' => $user->full_name,
-                    'aeskey' => $user->aes_key,
-                ]);
+            // $fabricResponse = Http::withOptions(['verify' => false])
+            //     ->post("{$this->blockchain_url}/ca/login", [
+            //         'org'    => $user->org,
+            //         'userId' => $user->full_name,
+            //         'aeskey' => $user->aes_key,
+            //     ]);
 
-            // Blockchain failed → stop immediately
-            if ($fabricResponse->failed() || $fabricResponse->status() !== 200) {
-                return [
-                    'success' => false,
-                    'message' => 'Blockchain authentication failed: ' . $fabricResponse->body(),
-                    'data' => null
-                ];
-            }
+            // // Blockchain failed → stop immediately
+            // if ($fabricResponse->failed() || $fabricResponse->status() !== 200) {
+            //     return [
+            //         'success' => false,
+            //         'message' => 'Blockchain authentication failed: ' . $fabricResponse->body(),
+            //         'data' => null
+            //     ];
+            // }
 
-            // Get Fabric token safely
-            $fabricToken = $fabricResponse->json()['message']['token'] ?? null;
+            // // Get Fabric token safely
+            // $fabricToken = $fabricResponse->json()['message']['token'] ?? null;
 
             return [
                 'success' => true,
