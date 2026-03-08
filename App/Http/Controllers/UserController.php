@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Mail\ResetPasswordOtpMail;
+use App\Services\Interfaces\BankServiceInterface;
+use App\Services\Interfaces\UserServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Repositories\Interfaces\UserRepositoryInterface;
-use App\Repositories\Interfaces\BankRepositoryInterface;
 use Illuminate\Support\Facades\Log; // Import Log facade at the top
 use App\Mail\InvitationMail;
 use Illuminate\Support\Facades\Mail;
@@ -17,12 +17,12 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class UserController extends Controller
 {
-    private $userRepository, $bankRepository;
+    private $userService, $bankService;
 
-    public function __construct(UserRepositoryInterface $userRepository, BankRepositoryInterface $bankRepository)
+    public function __construct(UserServiceInterface $userService, BankServiceInterface $bankService)
     {
-        $this->userRepository = $userRepository;
-        $this->bankRepository = $bankRepository;
+        $this->userService = $userService;
+        $this->bankService = $bankService;
     }
 
 
@@ -52,7 +52,7 @@ class UserController extends Controller
                 $data = json_decode($request->getContent(), true);
                 $data['url'] = $request->url();
                 $data['user_type_id'] = 1;
-                $out_data = $this->userRepository->userSignUp($data);
+                $out_data = $this->userService->userSignUp($data);
                 if (!$out_data['success']) {
                     $output['success'] = false;
                     $output['message'] = $out_data['message'];
@@ -68,7 +68,7 @@ class UserController extends Controller
                     'owner_id' => $user['user_id'],
                 ];
 
-                $bank_out_data = $this->bankRepository->createBankProfile($bankData);
+                $bank_out_data = $this->bankService->createBankProfile($bankData);
                 if (!$bank_out_data['success']) {
                     $output['success'] = false;
                     $output['message'] = $bank_out_data['message'];
@@ -79,7 +79,7 @@ class UserController extends Controller
                 $bank = $bank_out_data['data'];
 
                 //update user with bank id
-                $user_out_data = $this->userRepository->updateUser($user['user_id'], ['bank_id' => $bank['id']]);
+                $user_out_data = $this->userService->updateUser($user['user_id'], ['bank_id' => $bank['id']]);
                 if (!$user_out_data['success']) {
                     $output['success'] = false;
                     $output['message'] = $user_out_data['message'];
@@ -117,7 +117,7 @@ class UserController extends Controller
                 //$data = json_decode($request->getContent(), true);
                 $data = $request->all();
                 $data['url'] = $request->url();
-                $out_data = $this->userRepository->userSignIn(data: $data);
+                $out_data = $this->userService->userSignIn(data: $data);
 
                 $output['success'] = $out_data['success'];
                 $output['message'] = $out_data['message'];
@@ -133,88 +133,6 @@ class UserController extends Controller
         }
 
         return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
-    }
-
-    public function generateOTP(Request $request)
-    {
-        try {
-            $validator = Validator::make($request->all(), [
-                'email_address' => 'required|email'
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation error',
-                    'data' => $validator->errors()
-                ], 400);
-            } else {
-                $result = $this->userRepository->generateOTP($request->all());
-                if (!$result['success']) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => $result['message'],
-                        'data' => null
-                    ], 400);
-                }
-                return response()->json([
-                    'success' => true,
-                    'message' => $result['message'],
-                    'data' => $result['data']
-                ], 200);
-            }
-        } catch (\Exception $e) {
-            $url = "auth/otp/generate";
-            $this->logError($url, $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => "Something went wrong, please try again: " . $e->getMessage(),
-                'data' => null
-            ], 500);
-        }
-    }
-
-    public function otpVerify(Request $request)
-    {
-        try {
-            $validator = Validator::make($request->all(), [
-                'email_address' => 'required|email',
-                'otp' => 'required|string|min:6',
-                'reference' => 'required|string|min:12|max:255'
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation error',
-                    'data' => $validator->errors()
-                ], 400);
-            } else {
-                $result = $this->userRepository->otpVerify($request->all());
-                if (!$result['success']) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => $result['message'],
-                        'data' => null
-                    ], 400);
-                }
-                return response()->json([
-                    'success' => true,
-                    'message' => $result['message'],
-                    'data' => $result['data']
-                ], 200);
-            }
-        } catch (\Exception $e) {
-            $url = "auth/otp/verify";
-            $this->logError($url, $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => "Something went wrong, please try again: " . $e->getMessage(),
-                'data' => null
-            ], 500);
-        }
     }
 
     public function logOut(Request $request)
@@ -240,12 +158,10 @@ class UserController extends Controller
                 $output['data'] = null;
                 $output['message'] = "Logout successful";
             }
-
         } catch (\Exception $e) {
             $output['success'] = false;
             $output['data'] = null;
             $output['message'] = "Something went wrong, please try again: " . $e->getMessage();
-
         }
         return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
     }
@@ -262,7 +178,6 @@ class UserController extends Controller
             $output['success'] = false;
             $output['data'] = null;
             $output['message'] = "Something went wrong, please try again: " . $e->getMessage();
-
         }
         return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
     }
@@ -278,7 +193,7 @@ class UserController extends Controller
                     'data' => null
                 ]);
             }
-            $result = $this->userRepository->getAllUsers($user['bank_id']);
+            $result = $this->userService->getAllUsers($user['bank_id']);
 
             if (!$result['success']) {
                 return response()->json([
@@ -294,7 +209,6 @@ class UserController extends Controller
                 'data' => $result['data'],
                 'filter' => $result['filter']
             ], 200);
-
         } catch (\Exception $e) {
             $url = "auth/users";
             $this->logError($url, $e->getMessage());
@@ -318,7 +232,7 @@ class UserController extends Controller
                 ], 400);
             }
 
-            $result = $this->userRepository->deleteUser($id);
+            $result = $this->userService->deleteUser($id);
 
             if (!$result['success']) {
                 return response()->json([
@@ -332,7 +246,6 @@ class UserController extends Controller
                 'message' => $result['message'],
                 'data' => $result['data']
             ], 200);
-
         } catch (\Exception $e) {
             $url = "auth/users/delete";
             $this->logError($url, $e->getMessage());
@@ -389,7 +302,7 @@ class UserController extends Controller
                 ], 400);
             }
 
-            $result = $this->userRepository->updateUser($id, [
+            $result = $this->userService->updateUser($id, [
                 'full_name' => $full_name,
                 'email_address' => $email_address,
                 'mobile_number' => $mobile_number,
@@ -415,7 +328,6 @@ class UserController extends Controller
                 'message' => $result['message'],
                 'data' => $result['data']
             ], 200);
-
         } catch (\Exception $e) {
             $url = "auth/users/update";
             $this->logError($url, $e->getMessage());
@@ -431,7 +343,7 @@ class UserController extends Controller
     {
         try {
             $id = JwtAuth::user()->id;
-            $result = $this->userRepository->userData($id);
+            $result = $this->userService->userData($id);
             if (!$result['success']) {
                 return response()->json([
                     'success' => false,
@@ -472,46 +384,19 @@ class UserController extends Controller
             $data = json_decode($request->getContent(), true);
             $data['url'] = $request->url();
             $data['is_active'] = 0;
+            $data['sent_by'] = JwtAuth::user()->id;
+            $data['branch_id'] = JwtAuth::user()->branch_id;
+            $data['department_id'] = JwtAuth::user()->department_id;
             //check esxisting invitation
 
-            $out_data = $this->userRepository->userSignUp($data);
+            $out_data = $this->userService->addUser($data);
+            LOg::info('output: ');
+            Log::info($out_data);
             if (!$out_data['success']) {
                 $output['success'] = false;
                 $output['message'] = $out_data['message'];
                 $output['data'] = null;
                 return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
-            }
-
-            $new_user = $out_data['data'];
-            $token = $new_user['token'];
-            $inivitationData = [
-                'user_id' => $new_user['user_id'],
-                'sent_by' => JwtAuth::user()->id,
-                'bank_id' => JwtAuth::user()->bank_id,
-                'token' => $new_user['token'],
-                'email_address' => $data['email_address']
-            ];
-            // save invitation 
-            $invitation = $this->userRepository->saveInvitation($inivitationData);
-            if (!$invitation['success']) {
-                $this->userRepository->deleteUser($new_user['user_id']);
-                $output['success'] = false;
-                $output['message'] = $invitation['message'];
-                $output['data'] = null;
-                return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
-            }
-            //send invitation email
-            try {
-                Mail::to($data['email_address'])->send(new InvitationMail($token));
-            } catch (\Exception $e) {
-                // Log the error or handle it as needed
-                Log::error('Failed to send invitation email: ' . $e->getMessage());
-
-                // Optionally return or throw a custom response
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to send the invitation email. Please try again later.'
-                ], 500);
             }
 
             return response()->json([
@@ -547,9 +432,8 @@ class UserController extends Controller
                 ], 400);
             }
             $data = json_decode($request->getContent(), true);
-            Log::info($data);
             //get invitation data
-            $invitation = $this->userRepository->getInvitation($data['token']);
+            $invitation = $this->userService->getInvitation($data['token']);
             if (!$invitation['success']) {
                 $output['success'] = false;
                 $output['message'] = $invitation['message'];
@@ -562,7 +446,7 @@ class UserController extends Controller
             $data['url'] = $request->url();
 
 
-            $out_data = $this->userRepository->updateUser($data['user_id'], $data);
+            $out_data = $this->userService->updateUser($data['user_id'], $data);
             if (!$out_data['success']) {
                 $output['success'] = false;
                 $output['message'] = $out_data['message'];
@@ -570,7 +454,7 @@ class UserController extends Controller
                 return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
             }
 
-            $updatedInviation = $this->userRepository->updateInvitation($invitation['id']);
+            $updatedInviation = $this->userService->updateInvitation($invitation['id']);
             return response()->json([
                 'success' => true,
                 'message' => 'User registered successfully',
@@ -603,7 +487,7 @@ class UserController extends Controller
             $data = json_decode(json: $request->getContent(), associative: true);
             $data['url'] = $request->url();
             //check for user
-            $user = $this->userRepository->getUserByEmail($data['email_address']);
+            $user = $this->userService->getUserByEmail($data['email_address']);
             if (!$user['success']) {
                 return response()->json(data: [
                     'success' => false,
@@ -622,7 +506,7 @@ class UserController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
-            $out_data = $this->userRepository->saveOtp($dto);
+            $out_data = $this->userService->resetPasswordOtpSend($dto);
             if (!$out_data['success']) {
                 return response()->json(data: [
                     'success' => false,
@@ -630,26 +514,6 @@ class UserController extends Controller
                     'data' => null
                 ]);
             }
-
-            //send invitation email
-            try {
-                Mail::to(users: $data['email_address'])->send(mailable: new ResetPasswordOtpMail(otp: $otp));
-            } catch (\Exception $e) {
-                // Log the error or handle it as needed
-                Log::error(message: 'Failed to send otp: ' . $e->getMessage());
-
-                // Optionally return or throw a custom response
-                return response()->json(data: [
-                    'success' => false,
-                    'message' => 'Failed to send the invitation email. Please try again later.'
-                ], status: 500);
-            }
-
-            return response()->json(data: [
-                'success' => true,
-                'message' => 'Otp sent successfully',
-                'data' => null
-            ]);
         } catch (\Exception $e) {
             $url = "auth/users/data";
             $this->logError(url: $url, error_message: $e->getMessage());
@@ -675,7 +539,7 @@ class UserController extends Controller
             $email = $request->email_address;
             $otp = $request->otp;
 
-            $otpRecord = $this->userRepository->getOtp($email, $otp);
+            $otpRecord = $this->userService->verifyOtp($email, $otp);
 
             if (!$otpRecord) {
                 return response()->json(data: ['success' => false, 'message' => 'Invalid OTP'], status: 400);
@@ -686,7 +550,7 @@ class UserController extends Controller
             }
 
             // Get user
-            $user = $this->userRepository->getUserByEmail($email);
+            $user = $this->userService->getUserByEmail($email);
             if (!$user['success']) {
                 return response()->json(data: [
                     'success' => false,
@@ -705,9 +569,6 @@ class UserController extends Controller
                     'data' => null
                 ], status: 500);
             }
-
-            // OTP is valid → delete it
-            $this->userRepository->deleteOtp($otpRecord->id);
             $data = [
                 'token' => $token,
                 'user' => $user
@@ -740,7 +601,7 @@ class UserController extends Controller
             if ($validator->fails()) {
                 return response()->json(data: ['success' => false, 'message' => 'Validation error', 'data' => $validator->errors()], status: 400);
             }
-            $user = $this->userRepository->getUserByEmail($request->email_address);
+            $user = $this->userService->getUserByEmail($request->email_address);
 
             if (!$user['success']) {
                 return response()->json(data: [
@@ -755,7 +616,7 @@ class UserController extends Controller
             ];
 
             // update password (hashed)
-            $output = $this->userRepository->updateUser(id: $user['id'], data: $updateData);
+            $output = $this->userService->updateUser(id: $user['id'], data: $updateData);
             if (!$output['success']) {
                 return response()->json(data: [
                     'success' => false,
@@ -782,9 +643,8 @@ class UserController extends Controller
                     'token' => $token
                 ]
             ], status: 200);
-
         } catch (\Exception $e) {
-            \Log::error(message: 'Password setup failed: ' . $e->getMessage());
+            Log::error(message: 'Password setup failed: ' . $e->getMessage());
             return response()->json(data: [
                 'success' => false,
                 'message' => 'Something went wrong, please try again',
@@ -804,7 +664,7 @@ class UserController extends Controller
                 return response()->json(data: ['success' => false, 'message' => 'Validation error', 'data' => $validator->errors()], status: 400);
             }
             $id = JwtAuth::user()->id;
-            $response = $this->userRepository->updatePassword($id, $request->current_password, $request->new_password);
+            $response = $this->userService->updatePassword($id, $request->current_password, $request->new_password);
             if (!$response['success']) {
                 return response()->json(data: [
                     'success' => false,
@@ -817,9 +677,8 @@ class UserController extends Controller
                 'message' => 'Password updated successfully',
                 'data' => null
             ], status: 200);
-
         } catch (\Exception $e) {
-            \Log::error(message: 'Password setup failed: ' . $e->getMessage());
+            Log::error(message: 'Password setup failed: ' . $e->getMessage());
             return response()->json(data: [
                 'success' => false,
                 'message' => 'Something went wrong, please try again',
@@ -828,5 +687,108 @@ class UserController extends Controller
         }
     }
 
+    public function approvalVerification(Request $request)
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+            $data['url'] = $request->url();
+            Log::info($data);
+            $out_data = $this->userService->approvalVerification($data);
+            Log::info('responseC', $out_data);
+            $output['success'] = $out_data['success'];
+            $output['data'] = $data;
+            $output['message'] = $out_data['message'];
+        } catch (\Exception $e) {
+            $output['success'] = false;
+            $output['data'] = null;
+            $output['message'] = "Something went wrong, please try again: " . $e->getMessage();
+        }
+        return response()->json(['success' => $output['success'], 'message' => $output['message'], 'output' => $output['data']], 200);
+    }
 
+    public function addUserBulk(Request $request)
+    {
+        try {
+            // Validate CSV file
+            $validator = Validator::make($request->all(), [
+                'file' => 'required|mimes:csv,txt|max:2048',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation error',
+                    'data' => $validator->errors(),
+                ], 422);
+            }
+
+            // Read CSV file
+            $file = $request->file('file');
+            $rows = array_map('str_getcsv', file($file->getRealPath()));
+
+            $header = array_map('trim', $rows[0]); // first row = headers
+            unset($rows[0]); // remove header
+
+            $validatedUsers = [];
+            $errors = [];
+            $rowNumber = 1;
+
+            foreach ($rows as $row) {
+                $rowNumber++;
+
+                $userData = array_combine($header, $row); // map row to header keys
+
+                // Validation rules for each user
+                $rowValidator = Validator::make($userData, [
+                    'full_name' => 'required|string|max:255',
+                    'email_address' => 'required|email|unique:users,email_address',
+                    'mobile_number' => 'nullable|string',
+                    'nic' => 'required|string|unique:users,nic',
+                    'department' => 'required|string|exists:departments,department',
+                    'branch_code' => 'required|string|exists:branches,branch_code',
+                ]);
+
+                if ($rowValidator->fails()) {
+                    $errors[] = [
+                        'row' => $rowNumber,
+                        'errors' => $rowValidator->errors()->all()
+                    ];
+                    continue;
+                }
+
+                $validatedUsers[] = $userData;
+            }
+
+            // If any errors found, return them
+            if (!empty($errors)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Some rows contain invalid data',
+                    'errors' => $errors
+                ], 422);
+            }
+
+            // Send validated data to service layer
+            $response = $this->userService->addUserBulk($validatedUsers);
+
+            if (!$response['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $response['message'],
+                    'data' => null
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'All users added successfully',
+                'data' => null
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

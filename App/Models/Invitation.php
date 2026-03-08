@@ -17,15 +17,15 @@ class Invitation extends Model
         'updated_at'
     ];
 
-    public function owner(): BelongsTo
+    public function owner()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-    public function sentBy(): BelongsTo
+    public function sentBy()
     {
         return $this->belongsTo(User::class, 'sent_by');
     }
-    public function bankId(): BelongsTo
+    public function bankId()
     {
         return $this->belongsTo(BankProfile::class, 'sent_by');
     }

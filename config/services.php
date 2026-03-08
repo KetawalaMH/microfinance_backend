@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'blockchain' => [
+        'url' => env('BLOCK_CHAIN_BASE_URL'),
+    ],
+
+    'huggingface' => [
+        // 'api_url' => env('HUGGINGFACE_API_URL'),
+        'api_key' => env('HUGGINGFACE_API_KEY'),
+    ],
+
 ];

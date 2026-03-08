@@ -2,13 +2,20 @@
 
 namespace App\Repositories;
 
+use App\Models\AccountType;
+use App\Models\Branch;
+use App\Models\Department;
+use App\Models\LoanType;
 use App\Repositories\Interfaces\SettingRepositoryInterface;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Models\MemberType;
 
 use App\Models\Memory;
 use App\Models\Moment;
 use App\Models\MemoryStat;
+use Exception;
+use GrahamCampbell\ResultType\Success;
 use Illuminate\Support\Facades\Log; // Import Log facade at the top
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
@@ -72,5 +79,49 @@ class SettingRepository implements SettingRepositoryInterface
             $randomString .= $characters[rand(0, $charactersLength - 1)];
         }
         return $randomString;
+    }
+
+    public function getMemberTypes()
+    {
+        return MemberType::where('is_active', true)->get(['id', 'member_type']);
+    }
+    public function getAccountTypes()
+    {
+        return AccountType::where('is_active', true)->get(['id', 'type_name']);
+    }
+
+    public function getDepartmntId($name)
+    {
+        return Department::where('department', $name)->first()->id;
+    }
+    public function getBranchId($branch_code)
+    {
+        return Branch::where('branch_code', $branch_code)->first()->id;
+    }
+
+    public function getLoanTypes()
+    {
+        try {
+            $loanTypes = LoanType::where('is_active', true)->get(['id', 'loan_type']);
+            if (!$loanTypes) {
+                return [
+                    'success' => true,
+                    'message' => 'Loan types not found',
+                    'data' => []
+
+                ];
+            }
+            return [
+                'success' => true,
+                'message' => 'Loan types found',
+                'data' => $loanTypes
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' =>  null
+            ];
+        }
     }
 }

@@ -1,0 +1,137 @@
+<?php
+
+namespace App\Repositories;
+
+use App\Models\SavingAccount;
+use App\Repositories\Interfaces\SavingRepositoryInterface;
+use Exception;
+
+class SavingRepository implements SavingRepositoryInterface
+{
+    public function createSavingAccount(array $data)
+    {
+        try {
+            $account = SavingAccount::create($data);
+
+            return [
+                'success' => true,
+                'message' => 'Saving account created successfully',
+                'data' => $account
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    public function updateSavingAccount(array $data)
+    {
+        try {
+            SavingAccount::where('id', $data['id'])->update($data);
+
+            $savingAccount = SavingAccount::find($data['id']);
+            return [
+                'success' => true,
+                'message' => 'Saving account updated successfully',
+                'data' => $savingAccount
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    public function getSavingAccounts(array $data)
+    {
+        try {
+            $query = SavingAccount::with(['accountType', 'member']); // <-- add eager loading
+
+            if (isset($data['account_type_id'])) {
+                $query->where('account_type_id', $data['account_type_id']);
+            }
+
+            if (isset($data['status'])) {
+                $query->where('status', $data['status']);
+            }
+
+            $savingAccounts = $query->get();
+
+            return [
+                'success' => true,
+                'message' => 'Saving accounts fetched successfully',
+                'data' => $savingAccounts
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    public function getSavingAccountById($id)
+    {
+        try {
+            $savingAccount = SavingAccount::with(['accountType', 'member'])->find($id);
+            if (!$savingAccount) {
+                return [
+                    'success' => false,
+                    'message' => 'Saving account not found',
+                    'data' => null
+                ];
+            }
+            return [
+                'success' => true,
+                'message' => 'Saving account fetched successfully',
+                'data' => $savingAccount
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    public function getTotalSavingData()
+    {
+        return SavingAccount::whereIn('status', ['active', 'closed'])
+            ->select('id', 'member_id', 'current_balance', 'created_at', 'status')
+            ->get();
+    }
+
+    public function updateSavingStatus($id, $status)
+    {
+        try {
+            $account = SavingAccount::find($id);
+            if (!$account) {
+                return [
+                    'success' => false,
+                    'message' => 'Account not found.',
+                    'data' => null
+                ];
+            }
+            $account->status = $status;
+            $account->save();
+            return [
+                'success' => true,
+                'message' => 'Account status updated successfully.',
+                'data' => $account
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+}

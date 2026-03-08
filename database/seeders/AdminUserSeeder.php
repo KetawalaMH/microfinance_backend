@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Services\UserService;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Log;
 
 class AdminUserSeeder extends Seeder
 {
@@ -12,6 +13,22 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        $userService = app(UserService::class);
+
+        $adminUser = [
+            'full_name' => 'Admin7',
+            'email_address' => 'pgvidushadilshan1@gmail.com',
+            'mobile_number' => '1234567890',
+            'password' => 'password@A',
+            'user_type_id' => 1,
+            'is_active' => true,
+            'org' => 'org1',
+            'nic' => '123456788V',
+            'branch_id' => 1,
+            'department_id' => 1
+        ];
+
+
+        $user = $userService->userSignUp($adminUser);
     }
 }

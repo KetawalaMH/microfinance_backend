@@ -28,4 +28,11 @@ interface UserRepositoryInterface
     public function saveInvitation($data);
     public function getInvitation($data);
 
+    public function addUserBulk(array $data);
+
+    public function getUserByEmail($email);
+
+    public function updatePassword(string $id, string $currentPassword, string $newPassword);
+
+    public function approvalVerification(array $data);
 }
